@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import call, MagicMock, Mock
-from maze_solver.maze_solver import MazeSolver, Motors
+from maze_solver.maze_solver import MazeSolver, Motors, NotificationType
 
 class MazeSolverTest(unittest.TestCase):
 
@@ -116,11 +116,7 @@ class MazeSolverTest(unittest.TestCase):
         for _ in range(20):
             manager.reset_mock()
 
-            try:
-                self._maze_solver.next_move()
-            except:
-                # For this test, ignore the "cannot move" or any other exeption
-                pass
+            self._maze_solver.next_move()
 
             self.assert_wall_detector_calls_in_any_order(call.the_mock_wall_detector, manager.mock_calls[0:3])
             self.assertTrue(
@@ -135,12 +131,13 @@ class MazeSolverTest(unittest.TestCase):
         self.assertTrue(_left_turns > 3, 'Too few left turns made!')
         self.assertTrue(_right_turns > 3, 'Too few right turns made!')
 
-    def test_should_raise_exeption_when_all_sides_are_blocked(self):
+    def test_should_notify_error_when_all_sides_are_blocked(self):
         self._wall_detector.is_left_blocked.return_value = True
         self._wall_detector.is_front_blocked.return_value = True
         self._wall_detector.is_right_blocked.return_value = True
 
-        self.assertRaises(Exception, self._maze_solver.next_move)
+        self._maze_solver.next_move()
+        self._outputs.notify.assert_called_with(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
 
     def test_should_turn_randomly_either_left_or_make_no_turn_and_move_forward_when_only_right_is_blocked(self):
         self._wall_detector.is_left_blocked.return_value = False

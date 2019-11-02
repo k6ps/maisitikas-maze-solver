@@ -79,7 +79,7 @@ class MazeSolver(object):
             _left_blocked = self._wall_detector.is_left_blocked()
             _right_blocked = self._wall_detector.is_right_blocked()
         if _all_blocked_retries_left <= 0:
-            raise Exception('Cannot move, blocked from all sides!')
+            self._outputs.notify(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
         else:
             if not _front_blocked and _left_blocked and _right_blocked:
                 self._motors.no_turn()
@@ -103,5 +103,5 @@ class MazeSolver(object):
                 _call_one_in_random([self._motors.turn_left, self._motors.turn_right, self._motors.no_turn])
                 self._motors.move_forward()
             else:
-                raise Exception('Some weird situation, i dont know what to do!')
+                self._outputs.notify(NotificationType.ERROR, 'Some weird situation, i dont know what to do!')
 
