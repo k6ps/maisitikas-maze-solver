@@ -134,6 +134,13 @@ class MazeSolverTest(unittest.TestCase):
         self.assertTrue(_left_turns > 3, 'Too few left turns made!')
         self.assertTrue(_right_turns > 3, 'Too few right turns made!')
 
+    def test_should_raise_exeption_when_all_sides_are_blocked(self):
+        self._wall_detector.is_left_blocked.return_value = True
+        self._wall_detector.is_front_blocked.return_value = True
+        self._wall_detector.is_right_blocked.return_value = True
+
+        self.assertRaises(Exception, self._maze_solver.next_move)
+
     def test_should_turn_randomly_either_left_or_make_no_turn_and_move_forward_when_only_right_is_blocked(self):
         self._wall_detector.is_left_blocked.return_value = False
         self._wall_detector.is_front_blocked.return_value = False
