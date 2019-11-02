@@ -23,8 +23,9 @@ class BaseMazeResolverTest(unittest.TestCase):
     def setUp(self):
         self._motors = MagicMock()
         self._wall_detector = MagicMock()
+        self._finish_detector = MagicMock()
         self._outputs = MagicMock()
-        self._maze_solver = MazeSolver(self._motors, self._wall_detector, self._outputs)
+        self._maze_solver = MazeSolver(self._motors, self._wall_detector, self._finish_detector, self._outputs)
 
 
 class InNonFinishSquareWithAllSidesBlocked(BaseMazeResolverTest):

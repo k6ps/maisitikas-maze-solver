@@ -16,6 +16,12 @@ class Motors(object):
         pass
 
 
+class FinishDetector(object):
+    
+    def is_finish(self) -> bool:
+        return False
+
+
 class WallDetector(object):
     
     def is_left_blocked(self) -> bool:
@@ -49,9 +55,10 @@ class MazeSolver(object):
     def moves_left(self, value: int):
         self._moves_left = value
 
-    def __init__(self, motors: Motors, wall_detector: WallDetector, outputs: Outputs, max_moves: int = 99):
+    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 99):
         self._motors = motors
         self._wall_detector = wall_detector
+        self._finish_detector = finish_detector
         self._outputs = outputs
         self._moves_left = max_moves
         random.seed()
