@@ -49,7 +49,6 @@ class BaseMazeResolverTest(unittest.TestCase):
             'Call {} is not one of the expected calls!'.format(actual_call)
         )
 
-
     def prepare_mock_wall_detector(self, left_blocked: bool = True, front_blocked: bool = True, right_blocked: bool = True):
         self._wall_detector.is_left_blocked.return_value = left_blocked
         self._wall_detector.is_front_blocked.return_value = front_blocked
