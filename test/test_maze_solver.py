@@ -17,7 +17,8 @@ class MazeSolverTest(unittest.TestCase):
     def setUp(self):
         self._motors = MagicMock()
         self._wall_detector = MagicMock()
-        self._maze_solver = MazeSolver(self._motors, self._wall_detector)
+        self._outputs = MagicMock()
+        self._maze_solver = MazeSolver(self._motors, self._wall_detector, self._outputs)
 
     def test_should_check_walls_when_performing_next_move(self):
         self._wall_detector.is_left_blocked.return_value = True

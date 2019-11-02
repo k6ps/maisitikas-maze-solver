@@ -1,4 +1,5 @@
 import random
+from enum import Enum
 
 class Motors(object):
 
@@ -27,6 +28,17 @@ class WallDetector(object):
         return False
 
 
+class NotificationType(Enum):
+    INFO = 1
+    ERROR = 3
+
+
+class Outputs(object):
+
+    def notify(self, type: NotificationType, message: str):
+        pass
+
+
 class MazeSolver(object):
     
     @property
@@ -37,9 +49,10 @@ class MazeSolver(object):
     def moves_left(self, value: int):
         self._moves_left = value
 
-    def __init__(self, motors: Motors, wall_detector: WallDetector, max_moves: int = 99):
+    def __init__(self, motors: Motors, wall_detector: WallDetector, outputs: Outputs, max_moves: int = 99):
         self._motors = motors
         self._wall_detector = wall_detector
+        self._outputs = outputs
         self._moves_left = max_moves
         random.seed()
 
