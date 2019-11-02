@@ -75,6 +75,7 @@ class MazeSolver(object):
             else:
                 self._motors.turn_right()
 
+        self._finish_detector.is_finish()
         _front_blocked = self._wall_detector.is_front_blocked()
         _left_blocked = self._wall_detector.is_left_blocked()
         _right_blocked = self._wall_detector.is_right_blocked()
