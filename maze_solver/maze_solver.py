@@ -68,13 +68,6 @@ class MazeSolver(object):
         def _call_one_in_random(call_list):
             random.choice(call_list)()
 
-        def _turn_randomly_left_or_right():
-            _choice = random.randint(0, 1)
-            if _choice == 0:
-                self._motors.turn_left()
-            else:
-                self._motors.turn_right()
-
         self._finish_detector.is_finish()
         _front_blocked = self._wall_detector.is_front_blocked()
         _left_blocked = self._wall_detector.is_left_blocked()
