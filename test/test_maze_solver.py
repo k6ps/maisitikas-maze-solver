@@ -65,15 +65,38 @@ class BaseMazeResolverTest(unittest.TestCase):
         self._motors = MagicMock()
         self._wall_detector = MagicMock()
         self._finish_detector = MagicMock()
+        self._finish_detector.is_finish.return_value = False
         self._outputs = MagicMock()
         self._maze_solver = MazeSolver(self._motors, self._wall_detector, self._finish_detector, self._outputs)
+
+
+class InFinishSquare(BaseMazeResolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.prepare_mock_wall_detector(left_blocked = False, front_blocked = False)
+        self._finish_detector.is_finish.return_value = True
+
+    def test_should_not_make_any_turns_and_moves(self):
+        self._maze_solver.next_move()
+        self._motors.no_turn.assert_not_called()
+        self._motors.turn_left.assert_not_called()
+        self._motors.turn_right.assert_not_called()
+        self._motors.move_forward.assert_not_called()
+
+    def test_should_notify_info_finished(self):
+        self._maze_solver.next_move()
+        self._outputs.notify.assert_called_with(NotificationType.INFO, 'Finised successfully in finish square!')
+
+    def test_should_return_true(self):
+        self.assertTrue(self._maze_solver.next_move())
 
 
 class InNonFinishSquareWithAllSidesBlocked(BaseMazeResolverTest):
 
     def setUp(self):
         super().setUp()
-        self.prepare_mock_wall_detector()
+        self.prepare_mock_wall_detector() 
         self.prepare_call_recorder()
 
     def test_should_check_if_is_in_finish_square_as_first_action(self):
@@ -86,21 +109,10 @@ class InNonFinishSquareWithAllSidesBlocked(BaseMazeResolverTest):
 
     def test_should_turn_randomly_either_left_or_right_and_check_again(self):
         _motors_call_counter = MotorsCallCounter()
-        # _left_turns = 0
-        # _right_turns = 0
         for _ in range(20):
             self._call_recorder.reset_mock()
             self._maze_solver.next_move()
             _motors_call_counter.count_call(self._call_recorder.mock_calls[4])
-
-            # self.assert_call_is_one_of(
-            #     self._call_recorder.mock_calls[4], 
-            #     [call.the_mock_motors.turn_right(), call.the_mock_motors.turn_left()]
-            # )
-            # if str(self._call_recorder.mock_calls[4]) == 'call.the_mock_motors.turn_right()':
-            #     _right_turns += 1
-            # elif str(self._call_recorder.mock_calls[4]) == 'call.the_mock_motors.turn_left()':
-            #     _left_turns += 1
             self.assert_wall_detector_calls_in_any_order(call.the_mock_wall_detector, self._call_recorder.mock_calls[5:8])
         self.assertTrue(_motors_call_counter.left_turns > 3, 'Too few left turns made!')
         self.assertTrue(_motors_call_counter.right_turns > 3, 'Too few right turns made!')
@@ -109,6 +121,9 @@ class InNonFinishSquareWithAllSidesBlocked(BaseMazeResolverTest):
     def test_should_notify_error(self):
         self._maze_solver.next_move()
         self._outputs.notify.assert_called_with(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
+
+    def test_should_return_true(self):
+        self.assertTrue(self._maze_solver.next_move())
 
 
 class InNonFinishSquareWithOnlyFrontSideUnblocked(BaseMazeResolverTest):
@@ -136,6 +151,9 @@ class InNonFinishSquareWithOnlyFrontSideUnblocked(BaseMazeResolverTest):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
 
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
+
 
 class InNonFinishSquareWithOnlyLeftSideUnblocked(BaseMazeResolverTest):
 
@@ -162,6 +180,9 @@ class InNonFinishSquareWithOnlyLeftSideUnblocked(BaseMazeResolverTest):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
 
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
+
 
 class InNonFinishSquareWithOnlyRightSideUnblocked(BaseMazeResolverTest):
 
@@ -187,6 +208,9 @@ class InNonFinishSquareWithOnlyRightSideUnblocked(BaseMazeResolverTest):
     def test_should_move_forward_as_last_action(self):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
+
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
 
 
 class InNonFinishSquareWithOnlyFrontSideBlocked(BaseMazeResolverTest):
@@ -218,6 +242,9 @@ class InNonFinishSquareWithOnlyFrontSideBlocked(BaseMazeResolverTest):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
 
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
+
 
 class InNonFinishSquareWithOnlyLeftSideBlocked(BaseMazeResolverTest):
 
@@ -247,6 +274,9 @@ class InNonFinishSquareWithOnlyLeftSideBlocked(BaseMazeResolverTest):
     def test_should_move_forward_as_last_action(self):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
+
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
 
 
 class InNonFinishSquareWithOnlyRightSideBlocked(BaseMazeResolverTest):
@@ -278,6 +308,9 @@ class InNonFinishSquareWithOnlyRightSideBlocked(BaseMazeResolverTest):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
 
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
+
 
 class InNonFinishSquareWithAllSidesUnblocked(BaseMazeResolverTest):
 
@@ -307,6 +340,9 @@ class InNonFinishSquareWithAllSidesUnblocked(BaseMazeResolverTest):
     def test_should_move_forward_as_last_action(self):
         self._maze_solver.next_move()
         self.assertEqual(call.the_mock_motors.move_forward(), self._call_recorder.mock_calls[-1])
+
+    def test_should_return_false(self):
+        self.assertFalse (self._maze_solver.next_move())
 
 
 if __name__ == '__main__':

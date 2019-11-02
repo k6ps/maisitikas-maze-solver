@@ -68,7 +68,10 @@ class MazeSolver(object):
         def _call_one_in_random(call_list):
             random.choice(call_list)()
 
-        self._finish_detector.is_finish()
+        if self._finish_detector.is_finish():
+            self._outputs.notify(NotificationType.INFO, 'Finised successfully in finish square!')
+            return True
+
         _front_blocked = self._wall_detector.is_front_blocked()
         _left_blocked = self._wall_detector.is_left_blocked()
         _right_blocked = self._wall_detector.is_right_blocked()
@@ -81,6 +84,7 @@ class MazeSolver(object):
             _right_blocked = self._wall_detector.is_right_blocked()
         if _all_blocked_retries_left <= 0:
             self._outputs.notify(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
+            return True
         else:
             if not _front_blocked and _left_blocked and _right_blocked:
                 self._motors.no_turn()
@@ -105,4 +109,5 @@ class MazeSolver(object):
                 self._motors.move_forward()
             else:
                 self._outputs.notify(NotificationType.ERROR, 'Some weird situation, i dont know what to do!')
-
+                return True
+        return False
