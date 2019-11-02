@@ -83,7 +83,7 @@ class MazeSolverTest(unittest.TestCase):
 
         _left_turns = 0
         _right_turns = 0
-        for x in range(20):
+        for _ in range(20):
             manager.reset_mock()
 
             self._maze_solver.next_move()
@@ -112,7 +112,7 @@ class MazeSolverTest(unittest.TestCase):
 
         _left_turns = 0
         _right_turns = 0
-        for x in range(20):
+        for _ in range(20):
             manager.reset_mock()
 
             try:
@@ -152,7 +152,7 @@ class MazeSolverTest(unittest.TestCase):
 
         _left_turns = 0
         _no_turns = 0
-        for x in range(20):
+        for _ in range(20):
             manager.reset_mock()
 
             self._maze_solver.next_move()
@@ -181,7 +181,7 @@ class MazeSolverTest(unittest.TestCase):
 
         _right_turns = 0
         _no_turns = 0
-        for x in range(20):
+        for _ in range(20):
             manager.reset_mock()
 
             self._maze_solver.next_move()
@@ -211,7 +211,7 @@ class MazeSolverTest(unittest.TestCase):
         _left_turns = 0
         _right_turns = 0
         _no_turns = 0
-        for x in range(30):
+        for _ in range(30):
             manager.reset_mock()
 
             self._maze_solver.next_move()
