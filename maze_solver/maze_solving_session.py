@@ -1,6 +1,14 @@
+from enum import Enum
 from maze_solver.maze import Maze, MazeSquare
 from maze_solver.maze_solver import MazeSolver, NotificationType
 from maze_solver.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
+
+
+class Direction(Enum):
+    NORTH = {'x': 0, 'y': 1}
+    EAST = {'x': 1, 'y': 0}
+    SOUTH = {'x': 0, 'y': -1}
+    WEST = {'x': -1, 'y': 0}
 
 
 class MazeSolvingSession(object):
@@ -9,10 +17,15 @@ class MazeSolvingSession(object):
     def current_square(self) -> MazeSquare:
         return self._current_square
 
+    @property
+    def current_direction(self) -> Direction:
+        return self._current_direction
+
     def __init__(self, maze: Maze, maze_solver: MazeSolver):
         self._maze = maze
         self._maze_solver = maze_solver
         self._current_square = self._maze.start_square()
+        self._current_direction = Direction.NORTH
 
     def start(self):
         self._maze_solver.start()
