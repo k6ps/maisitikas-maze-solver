@@ -111,3 +111,12 @@ class MazeSolver(object):
                 self._outputs.notify(NotificationType.ERROR, 'Some weird situation, i dont know what to do!')
                 return True
         return False
+
+    def start(self):
+        _move_count = 0
+        _finished_or_cannot_move = False
+        while not _finished_or_cannot_move and _move_count < self._moves_left:
+            _finished_or_cannot_move = self.next_move()
+            _move_count += 1
+        if not _finished_or_cannot_move and _move_count >= self._moves_left:
+            self._outputs.notify(NotificationType.ERROR, 'Maximum allowed call count={} reached!'.format(self._moves_left))

@@ -11,8 +11,6 @@ class MazeSolvingSession(object):
         self._maze = maze
         self._maze_solver = maze_solver
         self._current_square = self._maze.start_square()
-        print("start square = ")
-        print(self._maze.start_square())
 
     def start(self):
         self._maze_solver.start()
