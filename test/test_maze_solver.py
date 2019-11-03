@@ -353,7 +353,7 @@ class BorderlessMazeWithNoWallsAndNoFinish(BaseMazeResolverTest):
         self._test_max_call_count = 13
 
     def test_should_perform_maximum_allowed_number_of_moves(self):
-        self._maze_solver.moves_left = self._test_max_call_count
+        self._maze_solver.max_moves = self._test_max_call_count
         self._maze_solver.start()
         _move_forward_call_count = 0
         for actual_call in self._call_recorder.mock_calls:
@@ -362,9 +362,9 @@ class BorderlessMazeWithNoWallsAndNoFinish(BaseMazeResolverTest):
         self.assertEqual(self._test_max_call_count, _move_forward_call_count)
 
     def test_should_notfy_max_call_count_reached(self):
-        self._maze_solver.moves_left = self._test_max_call_count
+        self._maze_solver.max_moves = self._test_max_call_count
         self._maze_solver.start()
-        self._outputs.notify.assert_called_with(NotificationType.ERROR, 'Maximum allowed call count={} reached!'.format(self._test_max_call_count))
+        self._outputs.notify.assert_called_with(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._test_max_call_count))
 
 
 if __name__ == '__main__':

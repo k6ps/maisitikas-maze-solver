@@ -48,19 +48,19 @@ class Outputs(object):
 class MazeSolver(object):
     
     @property
-    def moves_left(self) -> int:
-        return self._moves_left
+    def max_moves(self) -> int:
+        return self._max_moves
 
-    @moves_left.setter
-    def moves_left(self, value: int):
-        self._moves_left = value
+    @max_moves.setter
+    def max_moves(self, value: int):
+        self._max_moves = value
 
     def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 99):
         self._motors = motors
         self._wall_detector = wall_detector
         self._finish_detector = finish_detector
         self._outputs = outputs
-        self._moves_left = max_moves
+        self._max_moves = max_moves
         random.seed()
 
     def next_move(self):
@@ -115,8 +115,8 @@ class MazeSolver(object):
     def start(self):
         _move_count = 0
         _finished_or_cannot_move = False
-        while not _finished_or_cannot_move and _move_count < self._moves_left:
+        while not _finished_or_cannot_move and _move_count < self._max_moves:
             _finished_or_cannot_move = self.next_move()
             _move_count += 1
-        if not _finished_or_cannot_move and _move_count >= self._moves_left:
-            self._outputs.notify(NotificationType.ERROR, 'Maximum allowed call count={} reached!'.format(self._moves_left))
+        if not _finished_or_cannot_move and _move_count >= self._max_moves:
+            self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
