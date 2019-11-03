@@ -1,5 +1,7 @@
 from maze_solver.maze import Maze, MazeSquare
-from maze_solver.maze_solver import MazeSolver
+from maze_solver.maze_solver import MazeSolver, NotificationType
+from maze_solver.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
+
 
 class MazeSolvingSession(object):
 
@@ -14,3 +16,59 @@ class MazeSolvingSession(object):
 
     def start(self):
         self._maze_solver.start()
+
+
+class SimulatorMazeSolvingSession(MazeSolvingSession):
+
+    def create_simulator_maze_solver(self):
+        _motors = SimulatorMotors(
+            move_forward_callback=self.move_forward, 
+            turn_right_callback=self.turn_right, 
+            turn_left_callback=self.turn_left, 
+            no_turn_callback=self.no_turn
+        )
+        _wall_detector = SimulatorWallDetector(
+            is_left_blocked_callback=self.is_left_blocked, 
+            is_front_blocked_callback=self.is_front_blocked, 
+            is_right_blocked_callback=self.is_right_blocked
+        )
+        _finish_detector = SimulatorFinishDetector(is_finish_callback=self.is_finish)
+        _outputs = SimulatorOutputs(notify_callback=self.notify)
+        return MazeSolver(
+            motors=_motors, 
+            wall_detector=_wall_detector, 
+            finish_detector=_finish_detector, 
+            outputs=_outputs
+        )
+
+    def __init__(self, maze):
+        _simulator_maze_solver = self.create_simulator_maze_solver()
+        super().__init__(maze, _simulator_maze_solver)
+
+    def move_forward(self):
+        pass
+
+    def turn_right(self):
+        pass
+
+    def turn_left(self):
+        pass
+
+    def no_turn(self):
+        pass
+
+    def is_left_blocked(self) -> bool:
+        return False
+    
+    def is_front_blocked(self) -> bool:
+        return False
+    
+    def is_right_blocked(self) -> bool:
+        return False
+
+    def is_finish(self) -> bool:
+        return False
+
+    def notify(self, type: NotificationType, message: str):
+        pass
+
