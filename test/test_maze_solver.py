@@ -379,7 +379,6 @@ class SingleStraightFiveSquarePathAheadToFinish(BaseMazeResolverTest):
     def test_should_perform_five_moves(self):
         self._maze_solver.max_moves = self._test_max_call_count
         self._maze_solver.start()
-        print(self._call_recorder.mock_calls)
         _move_forward_call_count = 0
         for actual_call in self._call_recorder.mock_calls:
             if str(actual_call) == 'call.the_mock_motors.move_forward()':
