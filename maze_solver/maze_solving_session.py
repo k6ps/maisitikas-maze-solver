@@ -1,10 +1,10 @@
-from maze_solver.maze import Maze
+from maze_solver.maze import Maze, MazeSquare
 from maze_solver.maze_solver import MazeSolver
 
 class MazeSolvingSession(object):
 
     @property
-    def current_square(self) -> dict:
+    def current_square(self) -> MazeSquare:
         return self._current_square
 
     def __init__(self, maze: Maze, maze_solver: MazeSolver):

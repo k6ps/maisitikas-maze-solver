@@ -1,13 +1,58 @@
+class MazeSquare(object):
+
+    def __init__(self, x: int, y: int, x_plus: bool = False, y_plus: bool = False, x_minus: bool = False, y_minus: bool = False, is_start: bool = False, is_finish: bool = False):
+        self._x = x
+        self._y = y
+        self._x_plus = x_plus
+        self._x_minus = x_minus
+        self._y_plus = y_plus
+        self._y_minus = y_minus
+        self._is_start = is_start
+        self._is_finish = is_finish
+        
+    @property
+    def x(self) -> int:
+        return self._x
+
+    @property
+    def y(self) -> int:
+        return self._y
+
+    @property
+    def x_plus(self) -> bool:
+        return self._x_plus
+
+    @property
+    def x_minus(self) -> bool:
+        return self._x_minus
+
+    @property
+    def y_plus(self) -> bool:
+        return self._y_plus
+
+    @property
+    def y_minus(self) -> bool:
+        return self._y_minus
+
+    @property
+    def is_start(self) -> bool:
+        return self._is_start
+
+    @property
+    def is_finish(self) -> bool:
+        return self._is_finish
+
+
 class Maze(object):
 
     @property
-    def start_square(self) -> dict:
+    def start_square(self) -> MazeSquare:
         return self._start_square
 
-    def __init__(self):
-        self._squares = []
-        self._start_square = {'x': 1, 'y': 1}
-
-    
-
+    def __init__(self, squares: list):
+        self._squares = squares
+        for _square in self._squares:
+            if _square.is_start:
+                self._start_square = _square
+                break
     
