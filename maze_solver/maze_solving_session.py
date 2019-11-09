@@ -58,29 +58,68 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         _simulator_maze_solver = self.create_simulator_maze_solver()
         super().__init__(maze, _simulator_maze_solver)
 
+    def get_left_direction(self, front_direction):
+        if Direction.NORTH == front_direction:
+            return Direction.WEST
+        elif Direction.EAST == front_direction:
+            return Direction.NORTH
+        elif Direction.SOUTH == front_direction:
+            return Direction.EAST
+        elif Direction.WEST == front_direction:
+            return Direction.SOUTH
+        else:
+            return None
+
+    def get_right_direction(self, front_direction):
+        if Direction.NORTH == front_direction:
+            return Direction.EAST
+        elif Direction.EAST == front_direction:
+            return Direction.SOUTH
+        elif Direction.SOUTH == front_direction:
+            return Direction.WEST
+        elif Direction.WEST == front_direction:
+            return Direction.NORTH
+        else:
+            return None
+
+    def is_direction_from_current_square_blocked(self, direction):
+        if direction['x'] == 1:
+            return self._current_square.x_plus
+        elif direction['x'] == -1:
+            return self._current_square.x_minus
+        elif direction['y'] == 1:
+            return self._current_square.y_plus
+        elif direction['y'] == -1:
+            return self._current_square.y_minus
+        return True
+
     def move_forward(self):
-        pass
+        _next_x = self._current_square.x + self._current_direction.value['x']
+        _next_y = self._current_square.y + self._current_direction.value['y']
+        self._current_square = self._maze.get_square(x = _next_x, y = _next_y)
 
     def turn_right(self):
-        pass
+        self._current_direction = self.get_right_direction(self._current_direction)
 
     def turn_left(self):
-        pass
+        self._current_direction = self.get_left_direction(self._current_direction)
 
     def no_turn(self):
         pass
 
     def is_left_blocked(self) -> bool:
-        return False
+        _direction = self.get_left_direction(self._current_direction)
+        return self.is_direction_from_current_square_blocked(_direction)
     
     def is_front_blocked(self) -> bool:
-        return False
+        return self.is_direction_from_current_square_blocked(self._current_direction)
     
     def is_right_blocked(self) -> bool:
-        return False
+        _direction = self.get_right_direction(self._current_direction)
+        return self.is_direction_from_current_square_blocked(_direction)
 
     def is_finish(self) -> bool:
-        return False
+        return self._current_square.is_finish
 
     def notify(self, type: NotificationType, message: str):
         pass
