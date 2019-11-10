@@ -15,7 +15,7 @@ class MazeTests(unittest.TestCase):
         self._maze = Maze(self._test_squares)
 
     def test_shoud_find_correct_start_square(self):
-        _start_square = self._maze.start_square
+        _start_square = self._maze.get_start_square()
         self.assertEqual(self._square_22, _start_square)
 
     def test_should_get_correct_square(self):

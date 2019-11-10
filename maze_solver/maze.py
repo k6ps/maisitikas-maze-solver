@@ -33,7 +33,7 @@ class MazeSquare(object):
     @property
     def y_minus(self) -> bool:
         return self._y_minus
-
+ 
     @property
     def is_start(self) -> bool:
         return self._is_start
@@ -45,8 +45,7 @@ class MazeSquare(object):
 
 class Maze(object):
 
-    @property
-    def start_square(self) -> MazeSquare:
+    def get_start_square(self) -> MazeSquare:
         return self._start_square
 
     def get_key_for_square(self, x: int, y: int) -> str:
@@ -60,7 +59,6 @@ class Maze(object):
             self._squares_dict[_key] = _square
             if _square.is_start:
                 self._start_square = _square
-                break
     
     def get_square(self, x: int, y: int) -> MazeSquare:
         _key = self.get_key_for_square(x, y)

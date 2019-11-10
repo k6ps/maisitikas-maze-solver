@@ -8,7 +8,7 @@ class MazeSolvingSessionTests(unittest.TestCase):
 
     def setUp(self):
         self._maze = MagicMock()
-        self._maze.start_square.return_value = MazeSquare(x = 1, y = 1, is_start=True)
+        self._maze.get_start_square.return_value = MazeSquare(x = 1, y = 1, is_start=True)
         self._maze_solver = MagicMock()
         self._maze_solving_session = MazeSolvingSession(maze = self._maze, maze_solver = self._maze_solver)
 
@@ -27,7 +27,7 @@ class SimulatorMazeSolvingSessionTests(unittest.TestCase):
 
     def setUp(self):
         self._maze = MagicMock()
-        self._maze.start_square.return_value = MazeSquare(x = 1, y = 1, is_start=True)
+        self._maze.get_start_square.return_value = MazeSquare(x = 1, y = 1, is_start=True)
         self._simulator_maze_solving_session = SimulatorMazeSolvingSession(self._maze)
 
     def test_should_be_directed_east_when_right_turn_performed(self):

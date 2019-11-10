@@ -24,10 +24,12 @@ class MazeSolvingSession(object):
     def __init__(self, maze: Maze, maze_solver: MazeSolver):
         self._maze = maze
         self._maze_solver = maze_solver
-        self._current_square = self._maze.start_square()
+        self._current_square = self._maze.get_start_square()
         self._current_direction = Direction.NORTH
 
     def start(self):
+        print('DEBUG - MazeSolvingSession: start square is x={}, y={}'.format(self._current_square.x, self._current_square.y))
+        print('DEBUG - MazeSolvingSession: start direction is {}'.format( self._current_direction))
         self._maze_solver.start()
 
 
@@ -82,15 +84,16 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         else:
             return None
 
-    def is_direction_from_current_square_blocked(self, direction):
-        if direction['x'] == 1:
-            return self._current_square.x_plus
-        elif direction['x'] == -1:
-            return self._current_square.x_minus
-        elif direction['y'] == 1:
-            return self._current_square.y_plus
-        elif direction['y'] == -1:
-            return self._current_square.y_minus
+    def is_direction_from_current_square_blocked(self, direction: Direction) -> bool:
+        # print('DEBUG - SimulatorMazeSolvingSession: type of direction is {}'.format(type(direction)))
+        if direction.value['x'] == 1:
+            return not self._current_square.x_plus
+        elif direction.value['x'] == -1:
+            return not self._current_square.x_minus
+        elif direction.value['y'] == 1:
+            return not self._current_square.y_plus
+        elif direction.value['y'] == -1:
+            return not self._current_square.y_minus
         return True
 
     def move_forward(self):
@@ -123,5 +126,5 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         return self._current_square.is_finish
 
     def notify(self, type: NotificationType, message: str):
-        pass
+        print('Maze solver: {} - {}'.format(type, message))
 
