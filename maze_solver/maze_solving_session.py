@@ -97,6 +97,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         _next_x = self._current_square.x + self._current_direction.value['x']
         _next_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = self._maze.get_square(x = _next_x, y = _next_y)
+        print('Moving to square x={}, y={}'.format(_next_x, _next_y))
 
     def turn_right(self):
         self._current_direction = self.get_right_direction(self._current_direction)
