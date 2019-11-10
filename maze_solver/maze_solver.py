@@ -66,26 +66,10 @@ class MazeSolver(object):
     def call_one_in_random(self, call_list):
         random.choice(call_list)()
 
+    def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
+        pass
+
     def next_move(self):
-        return False
-
-    def start(self):
-        _move_count = 0
-        _finished_or_cannot_move = False
-        while not _finished_or_cannot_move and _move_count < self._max_moves:
-            # print('DEBUG - RandomWalkerMazeSolver: move count={}'.format(_move_count))
-            _finished_or_cannot_move = self.next_move()
-            _move_count += 1
-        if not _finished_or_cannot_move and _move_count >= self._max_moves:
-            # print('DEBUG - RandomWalkerMazeSolver: Maximum allowed move count={} reached!'.format(self._max_moves))
-            self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
-        return _move_count
-
-
-class RandomWalkerMazeSolver(MazeSolver):
-    
-    def next_move(self):
-
         # print('DEBUG - RandomWalkerMazeSolver: starting move')
 
         if self._finish_detector.is_finish():
@@ -109,33 +93,41 @@ class RandomWalkerMazeSolver(MazeSolver):
             self._outputs.notify(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
             return True
         else:
-            if not _front_blocked and _left_blocked and _right_blocked:
-                self._motors.no_turn()
-                self._motors.move_forward()
-            elif _front_blocked and _left_blocked and not _right_blocked:
-                self._motors.turn_right()
-                self._motors.move_forward()
-            elif _front_blocked and not _left_blocked and _right_blocked:
-                self._motors.turn_left()
-                self._motors.move_forward()
-            elif _front_blocked and not _left_blocked and not _right_blocked:
-                self.call_one_in_random([self._motors.turn_left, self._motors.turn_right])
-                self._motors.move_forward()
-            elif not _front_blocked and not _left_blocked and _right_blocked:
-                self.call_one_in_random([self._motors.turn_left, self._motors.no_turn])
-                self._motors.move_forward()
-            elif not _front_blocked and _left_blocked and not _right_blocked:
-                self.call_one_in_random([self._motors.turn_right, self._motors.no_turn])
-                self._motors.move_forward()
-            elif not _front_blocked and not _left_blocked and not _right_blocked:
-                self.call_one_in_random([self._motors.turn_left, self._motors.turn_right, self._motors.no_turn])
-                self._motors.move_forward()
-            else:
-                # print('DEBUG - RandomWalkerMazeSolver: Some weird situation, i dont know what to do!')
-                self._outputs.notify(NotificationType.ERROR, 'Some weird situation, i dont know what to do!')
-                return True
+            self.next_turn(_left_blocked, _front_blocked, _right_blocked)
+            self._motors.move_forward()
         # print('DEBUG - RandomWalkerMazeSolver: Move done, ready for next')
         return False
+
+    def start(self):
+        _move_count = 0
+        _finished_or_cannot_move = False
+        while not _finished_or_cannot_move and _move_count < self._max_moves:
+            # print('DEBUG - RandomWalkerMazeSolver: move count={}'.format(_move_count))
+            _finished_or_cannot_move = self.next_move()
+            _move_count += 1
+        if not _finished_or_cannot_move and _move_count >= self._max_moves:
+            # print('DEBUG - RandomWalkerMazeSolver: Maximum allowed move count={} reached!'.format(self._max_moves))
+            self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
+        return _move_count
+
+
+class RandomWalkerMazeSolver(MazeSolver):
+
+    def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
+        if not front_blocked and left_blocked and right_blocked:
+            self._motors.no_turn()
+        elif front_blocked and left_blocked and not right_blocked:
+            self._motors.turn_right()
+        elif front_blocked and not left_blocked and right_blocked:
+            self._motors.turn_left()
+        elif front_blocked and not left_blocked and not right_blocked:
+            self.call_one_in_random([self._motors.turn_left, self._motors.turn_right])
+        elif not front_blocked and not left_blocked and right_blocked:
+            self.call_one_in_random([self._motors.turn_left, self._motors.no_turn])
+        elif not front_blocked and left_blocked and not right_blocked:
+            self.call_one_in_random([self._motors.turn_right, self._motors.no_turn])
+        elif not front_blocked and not left_blocked and not right_blocked:
+            self.call_one_in_random([self._motors.turn_left, self._motors.turn_right, self._motors.no_turn])
 
 
 class PathRememberingMazeSolver(MazeSolver):
