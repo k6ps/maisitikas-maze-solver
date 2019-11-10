@@ -45,7 +45,7 @@ class Outputs(object):
         pass
 
 
-class MazeSolver(object):
+class RandomWalkerMazeSolver(object):
     
     @property
     def max_moves(self) -> int:
@@ -68,7 +68,7 @@ class MazeSolver(object):
         def _call_one_in_random(call_list):
             random.choice(call_list)()
 
-        # print('DEBUG - MazeSolver: starting move')
+        # print('DEBUG - RandomWalkerMazeSolver: starting move')
 
         if self._finish_detector.is_finish():
             self._outputs.notify(NotificationType.INFO, 'Finised successfully in finish square!')
@@ -77,7 +77,7 @@ class MazeSolver(object):
         _front_blocked = self._wall_detector.is_front_blocked()
         _left_blocked = self._wall_detector.is_left_blocked()
         _right_blocked = self._wall_detector.is_right_blocked()
-        # print('DEBUG - MazeSolver: left blocked={}, front blocked={}, right blocked={}'.format(_left_blocked, _front_blocked, _right_blocked))
+        # print('DEBUG - RandomWalkerMazeSolver: left blocked={}, front blocked={}, right blocked={}'.format(_left_blocked, _front_blocked, _right_blocked))
 
         _all_blocked_retries_left = 5
         while _front_blocked and _left_blocked and _right_blocked and _all_blocked_retries_left > 0:
@@ -87,7 +87,7 @@ class MazeSolver(object):
             _left_blocked = self._wall_detector.is_left_blocked()
             _right_blocked = self._wall_detector.is_right_blocked()
         if _all_blocked_retries_left <= 0:
-            # print('DEBUG - MazeSolver: Cannot move, blocked from all sides!')
+            # print('DEBUG - RandomWalkerMazeSolver: Cannot move, blocked from all sides!')
             self._outputs.notify(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
             return True
         else:
@@ -113,20 +113,20 @@ class MazeSolver(object):
                 _call_one_in_random([self._motors.turn_left, self._motors.turn_right, self._motors.no_turn])
                 self._motors.move_forward()
             else:
-                # print('DEBUG - MazeSolver: Some weird situation, i dont know what to do!')
+                # print('DEBUG - RandomWalkerMazeSolver: Some weird situation, i dont know what to do!')
                 self._outputs.notify(NotificationType.ERROR, 'Some weird situation, i dont know what to do!')
                 return True
-        # print('DEBUG - MazeSolver: Move done, ready for next')
+        # print('DEBUG - RandomWalkerMazeSolver: Move done, ready for next')
         return False
 
     def start(self):
         _move_count = 0
         _finished_or_cannot_move = False
         while not _finished_or_cannot_move and _move_count < self._max_moves:
-            # print('DEBUG - MazeSolver: move count={}'.format(_move_count))
+            # print('DEBUG - RandomWalkerMazeSolver: move count={}'.format(_move_count))
             _finished_or_cannot_move = self.next_move()
             _move_count += 1
         if not _finished_or_cannot_move and _move_count >= self._max_moves:
-            # print('DEBUG - MazeSolver: Maximum allowed move count={} reached!'.format(self._max_moves))
+            # print('DEBUG - RandomWalkerMazeSolver: Maximum allowed move count={} reached!'.format(self._max_moves))
             self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
         return _move_count

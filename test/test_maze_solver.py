@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import call, MagicMock, Mock
-from maze_solver.maze_solver import MazeSolver, Motors, NotificationType
+from maze_solver.maze_solver import RandomWalkerMazeSolver, Motors, NotificationType
 
 
 class MotorsCallCounter(object):
@@ -66,7 +66,7 @@ class BaseMazeResolverTest(unittest.TestCase):
         self._finish_detector = MagicMock()
         self._finish_detector.is_finish.return_value = False
         self._outputs = MagicMock()
-        self._maze_solver = MazeSolver(self._motors, self._wall_detector, self._finish_detector, self._outputs)
+        self._maze_solver = RandomWalkerMazeSolver(self._motors, self._wall_detector, self._finish_detector, self._outputs)
 
 
 class InFinishSquare(BaseMazeResolverTest):

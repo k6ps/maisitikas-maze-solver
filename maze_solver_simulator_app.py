@@ -1,4 +1,4 @@
-from maze_solver.maze_solver import MazeSolver
+from maze_solver.maze_solver import RandomWalkerMazeSolver
 from maze_solver.maze_solving_session import SimulatorMazeSolvingSession
 from maze_solver.maze import MazeSquare, Maze
 

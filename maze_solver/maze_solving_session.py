@@ -1,6 +1,6 @@
 from enum import Enum
 from maze_solver.maze import Maze, MazeSquare
-from maze_solver.maze_solver import MazeSolver, NotificationType
+from maze_solver.maze_solver import RandomWalkerMazeSolver, NotificationType
 from maze_solver.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
 
 
@@ -21,7 +21,7 @@ class MazeSolvingSession(object):
     def current_direction(self) -> Direction:
         return self._current_direction
 
-    def __init__(self, maze: Maze, maze_solver: MazeSolver):
+    def __init__(self, maze: Maze, maze_solver: RandomWalkerMazeSolver):
         self._maze = maze
         self._maze_solver = maze_solver
         self._current_square = self._maze.get_start_square()
@@ -50,7 +50,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         )
         _finish_detector = SimulatorFinishDetector(is_finish_callback=self.is_finish)
         _outputs = SimulatorOutputs(notify_callback=self.notify)
-        return MazeSolver(
+        return RandomWalkerMazeSolver(
             motors=_motors, 
             wall_detector=_wall_detector, 
             finish_detector=_finish_detector, 
