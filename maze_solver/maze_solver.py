@@ -55,7 +55,7 @@ class MazeSolver(object):
     def max_moves(self, value: int):
         self._max_moves = value
 
-    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 99):
+    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 9999):
         self._motors = motors
         self._wall_detector = wall_detector
         self._finish_detector = finish_detector
