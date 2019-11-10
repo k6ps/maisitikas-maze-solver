@@ -57,8 +57,11 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         )
 
     def __init__(self, maze):
+        # These are the supposed average times it would take to move, 
+        # if it was a real physical thing.
         self._FORWARD_MOTION_TIME_SECONDS = 2
         self._TURN_MOTION_TIME_SECONDS = 2
+
         _simulator_maze_solver = self.create_simulator_maze_solver()
         self._motion_time_in_seconds = 0
         super().__init__(maze, _simulator_maze_solver)
