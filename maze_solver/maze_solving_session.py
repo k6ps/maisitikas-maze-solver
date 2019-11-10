@@ -57,7 +57,10 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         )
 
     def __init__(self, maze):
+        self._FORWARD_MOTION_TIME_SECONDS = 2
+        self._TURN_MOTION_TIME_SECONDS = 2
         _simulator_maze_solver = self.create_simulator_maze_solver()
+        self._motion_time_in_seconds = 0
         super().__init__(maze, _simulator_maze_solver)
 
     def get_left_direction(self, front_direction):
@@ -100,13 +103,16 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         _next_x = self._current_square.x + self._current_direction.value['x']
         _next_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = self._maze.get_square(x = _next_x, y = _next_y)
-        print('Moving to square x={}, y={}'.format(_next_x, _next_y))
+        self._motion_time_in_seconds += self._FORWARD_MOTION_TIME_SECONDS
+        print('DEBUG - SimulatorMazeSolvingSession: moving to square x={}, y={}'.format(_next_x, _next_y))
 
     def turn_right(self):
         self._current_direction = self.get_right_direction(self._current_direction)
+        self._motion_time_in_seconds += self._TURN_MOTION_TIME_SECONDS
 
     def turn_left(self):
         self._current_direction = self.get_left_direction(self._current_direction)
+        self._motion_time_in_seconds += self._TURN_MOTION_TIME_SECONDS
 
     def no_turn(self):
         pass
@@ -128,3 +134,6 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
     def notify(self, type: NotificationType, message: str):
         print('Maze solver: {} - {}'.format(type, message))
 
+    def start(self):
+        super().start()
+        print('DEBUG - SimulatorMazeSolvingSession: total motion time ={}'.format(self._motion_time_in_seconds))
