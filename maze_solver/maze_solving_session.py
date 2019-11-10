@@ -28,9 +28,10 @@ class MazeSolvingSession(object):
         self._current_direction = Direction.NORTH
 
     def start(self):
-        print('DEBUG - MazeSolvingSession: start square is x={}, y={}'.format(self._current_square.x, self._current_square.y))
-        print('DEBUG - MazeSolvingSession: start direction is {}'.format( self._current_direction))
-        self._maze_solver.start()
+        # print('DEBUG - MazeSolvingSession: start square is x={}, y={}'.format(self._current_square.x, self._current_square.y))
+        # print('DEBUG - MazeSolvingSession: start direction is {}'.format( self._current_direction))
+        _move_count = self._maze_solver.start()
+        print('INFO - MazeSolvingSession: total move count={}'.format(_move_count))
 
 
 class SimulatorMazeSolvingSession(MazeSolvingSession):
@@ -139,4 +140,4 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
 
     def start(self):
         super().start()
-        print('DEBUG - SimulatorMazeSolvingSession: total motion time ={}'.format(self._motion_time_in_seconds))
+        print('DEBUG - SimulatorMazeSolvingSession: total motion time={}'.format(self._motion_time_in_seconds))
