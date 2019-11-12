@@ -1,5 +1,6 @@
 import random
 from enum import Enum
+from maze_solver.direction import Direction
 
 class Motors(object):
 
@@ -150,13 +151,6 @@ class Square(object):
         self._y = y
 
 
-class Direction(Enum):
-    NORTH = {'x': 0, 'y': 1}
-    EAST = {'x': 1, 'y': 0}
-    SOUTH = {'x': 0, 'y': -1}
-    WEST = {'x': -1, 'y': 0}
-
-
 # Prefers unexplored paths, remembers and avoids dead-ends - but can still 
 # randomly wander in already explored areas.
 class CuriousMazeSolver(MazeSolver):
@@ -169,42 +163,6 @@ class CuriousMazeSolver(MazeSolver):
     def current_direction(self) -> Direction:
         return self._current_direction
 
-    def get_left_direction(self, front_direction):
-        if Direction.NORTH == front_direction:
-            return Direction.WEST
-        elif Direction.EAST == front_direction:
-            return Direction.NORTH
-        elif Direction.SOUTH == front_direction:
-            return Direction.EAST
-        elif Direction.WEST == front_direction:
-            return Direction.SOUTH
-        else:
-            return None
-
-    def get_right_direction(self, front_direction):
-        if Direction.NORTH == front_direction:
-            return Direction.EAST
-        elif Direction.EAST == front_direction:
-            return Direction.SOUTH
-        elif Direction.SOUTH == front_direction:
-            return Direction.WEST
-        elif Direction.WEST == front_direction:
-            return Direction.NORTH
-        else:
-            return None
-
-    def get_back_direction(self, front_direction):
-        if Direction.NORTH == front_direction:
-            return Direction.SOUTH
-        elif Direction.EAST == front_direction:
-            return Direction.WEST
-        elif Direction.SOUTH == front_direction:
-            return Direction.NORTH
-        elif Direction.WEST == front_direction:
-            return Direction.EAST
-        else:
-            return None
-            
     def get_key_for_square(self, x: int, y: int) -> str:
         return '{}-{}'.format(x, y)
 
@@ -220,17 +178,17 @@ class CuriousMazeSolver(MazeSolver):
 
     def turn_left(self):
         super().turn_left()
-        self._current_direction = self.get_left_direction(self._current_direction)
+        self._current_direction = self._current_direction.get_left_direction()
         print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
 
     def turn_right(self):
         super().turn_right()
-        self._current_direction = self.get_right_direction(self._current_direction)
+        self._current_direction = self._current_direction.get_right_direction()
         print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
 
     def turn_back(self):
         super().turn_back()
-        self._current_direction = self.get_back_direction(self._current_direction)
+        self._current_direction = self._current_direction.get_back_direction()
         print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
 
     def move_forward_to_next_square(self):

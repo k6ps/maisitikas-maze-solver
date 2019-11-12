@@ -1,14 +1,7 @@
-from enum import Enum
 from maze_solver.maze import Maze, MazeSquare
 from maze_solver.maze_solver import MazeSolver, RandomWalkerMazeSolver, CuriousMazeSolver, NotificationType
 from maze_solver.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
-
-
-class Direction(Enum):
-    NORTH = {'x': 0, 'y': 1}
-    EAST = {'x': 1, 'y': 0}
-    SOUTH = {'x': 0, 'y': -1}
-    WEST = {'x': -1, 'y': 0}
+from maze_solver.direction import Direction
 
 
 class MazeSolvingSession(object):
@@ -69,42 +62,6 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         self._motion_time_in_seconds = 0
         super().__init__(maze, _simulator_maze_solver)
 
-    def get_left_direction(self, front_direction):
-        if Direction.NORTH == front_direction:
-            return Direction.WEST
-        elif Direction.EAST == front_direction:
-            return Direction.NORTH
-        elif Direction.SOUTH == front_direction:
-            return Direction.EAST
-        elif Direction.WEST == front_direction:
-            return Direction.SOUTH
-        else:
-            return None
-
-    def get_right_direction(self, front_direction):
-        if Direction.NORTH == front_direction:
-            return Direction.EAST
-        elif Direction.EAST == front_direction:
-            return Direction.SOUTH
-        elif Direction.SOUTH == front_direction:
-            return Direction.WEST
-        elif Direction.WEST == front_direction:
-            return Direction.NORTH
-        else:
-            return None
-
-    def get_back_direction(self, front_direction):
-        if Direction.NORTH == front_direction:
-            return Direction.SOUTH
-        elif Direction.EAST == front_direction:
-            return Direction.WEST
-        elif Direction.SOUTH == front_direction:
-            return Direction.NORTH
-        elif Direction.WEST == front_direction:
-            return Direction.EAST
-        else:
-            return None
-
     def is_direction_from_current_square_blocked(self, direction: Direction) -> bool:
         # print('DEBUG - SimulatorMazeSolvingSession: type of direction is {}'.format(type(direction)))
         if direction.value['x'] == 1:
@@ -125,29 +82,29 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         print('DEBUG - SimulatorMazeSolvingSession: moving to square x={}, y={}'.format(_next_x, _next_y))
 
     def turn_right(self):
-        self._current_direction = self.get_right_direction(self._current_direction)
+        self._current_direction = self._current_direction.get_right_direction()
         self._motion_time_in_seconds += self._TURN_MOTION_TIME_SECONDS
 
     def turn_left(self):
-        self._current_direction = self.get_left_direction(self._current_direction)
+        self._current_direction = self._current_direction.get_left_direction()
         self._motion_time_in_seconds += self._TURN_MOTION_TIME_SECONDS
 
     def turn_back(self):
-        self._current_direction = self.get_back_direction(self._current_direction)
+        self._current_direction = self._current_direction.get_back_direction()
         self._motion_time_in_seconds += self._BACK_TURN_MOTION_TIME_SECONDS
 
     def no_turn(self):
         pass
 
     def is_left_blocked(self) -> bool:
-        _direction = self.get_left_direction(self._current_direction)
+        _direction = self._current_direction.get_left_direction()
         return self.is_direction_from_current_square_blocked(_direction)
     
     def is_front_blocked(self) -> bool:
         return self.is_direction_from_current_square_blocked(self._current_direction)
     
     def is_right_blocked(self) -> bool:
-        _direction = self.get_right_direction(self._current_direction)
+        _direction = self._current_direction.get_right_direction()
         return self.is_direction_from_current_square_blocked(_direction)
 
     def is_finish(self) -> bool:
