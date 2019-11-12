@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import call, MagicMock, Mock
-from maze_solver.maze_solver import RandomWalkerMazeSolver, Motors, NotificationType
+from maze_solver.maze_solver import RandomWalkerMazeSolver, CuriousMazeSolver, Motors, NotificationType, Direction
 
 
 class MotorsCallCounter(object):
@@ -60,12 +60,15 @@ class BaseMazeResolverTest(unittest.TestCase):
         self._call_recorder.the_mock_wall_detector = self._wall_detector
         self._call_recorder.the_mock_finish_detector = self._finish_detector
 
-    def setUp(self):
+    def create_mocks(self):
         self._motors = MagicMock()
         self._wall_detector = MagicMock()
         self._finish_detector = MagicMock()
         self._finish_detector.is_finish.return_value = False
         self._outputs = MagicMock()
+
+    def setUp(self):
+        self.create_mocks()
         self._maze_solver = RandomWalkerMazeSolver(self._motors, self._wall_detector, self._finish_detector, self._outputs)
 
 
@@ -389,6 +392,62 @@ class SingleStraightFiveSquarePathAheadToFinish(BaseMazeResolverTest):
         self._maze_solver.max_moves = self._test_max_call_count
         self._maze_solver.start()
         self._outputs.notify.assert_called_with(NotificationType.INFO, 'Finised successfully in finish square!')
+
+
+class CuriousMazeSolverTest(BaseMazeResolverTest):
+
+    def setUp(self):
+        self.create_mocks()
+        self._maze_solver = CuriousMazeSolver(self._motors, self._wall_detector, self._finish_detector, self._outputs)
+
+    def test_should_mark_the_x1_y1_start_square_as_current_when_created(self):
+        self.assertEqual(1, self._maze_solver.current_square.x)
+        self.assertEqual(1, self._maze_solver.current_square.y)
+
+    def test_should_set_north_as_current_direction_when_created(self):
+        self.assertEqual(Direction.NORTH, self._maze_solver.current_direction)
+
+    def test_should_mark_start_square_as_visited_when_making_first_move(self):
+        self.assertFalse(self._maze_solver.is_visited(x = 1, y = 1))
+        self.prepare_mock_wall_detector(front_blocked = False)
+        self._maze_solver.next_move()
+        self.assertTrue(self._maze_solver.is_visited(x = 1, y = 1))
+
+    def test_should_mark_the_second_square_as_visited_when_making_two_forward_moves(self):
+        self.prepare_mock_wall_detector(front_blocked = False)
+        self._maze_solver.next_move()
+        self.assertFalse(self._maze_solver.is_visited(x = 1, y = 2))
+        self._maze_solver.next_move()
+        self.assertTrue(self._maze_solver.is_visited(x = 1, y = 2))
+
+    def test_should_mark_the_third_square_as_visited_when_making_two_forward_and_one_right_moves(self):
+        self._wall_detector.is_front_blocked.side_effect = [False, False, True]
+        self._wall_detector.is_left_blocked.side_effect = [True, True, True]
+        self._wall_detector.is_right_blocked.side_effect = [True, True, False]
+        self._maze_solver.next_move()
+        self._maze_solver.next_move()
+        self.assertFalse(self._maze_solver.is_visited(x = 1, y = 3))
+        self._maze_solver.next_move()
+        self.assertTrue(self._maze_solver.is_visited(x = 1, y = 3))
+
+    def test_should_mark_the_fourth_square_as_visited_when_making_two_forward_and_two_right_moves(self):
+        self._wall_detector.is_front_blocked.side_effect = [False, False, True, True]
+        self._wall_detector.is_left_blocked.side_effect = [True, True, True, True]
+        self._wall_detector.is_right_blocked.side_effect = [True, True, False, False]
+        self._maze_solver.next_move()
+        self._maze_solver.next_move()
+        self._maze_solver.next_move()
+        self.assertFalse(self._maze_solver.is_visited(x = 2, y = 3))
+        self._maze_solver.next_move()
+        self.assertTrue(self._maze_solver.is_visited(x = 2, y = 3))
+
+    # def test_should_mark_square_as_dead_end_when_all_sides_blocked(self):
+    #     self._wall_detector.is_front_blocked.side_effect = [False, True]
+    #     self._wall_detector.is_left_blocked.side_effect = [True, True]
+    #     self._wall_detector.is_right_blocked.side_effect = [True, True]
+    #     self._maze_solver.next_move()
+    #     self._maze_solver.next_move()
+    #     self.assertTrue(self._maze_solver.is_visited(x = 1, y = 2))
 
 
 if __name__ == '__main__':
