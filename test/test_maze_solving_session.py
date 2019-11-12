@@ -38,6 +38,10 @@ class SimulatorMazeSolvingSessionTests(unittest.TestCase):
         self._simulator_maze_solving_session.turn_left()
         self.assertEqual(Direction.WEST, self._simulator_maze_solving_session.current_direction)
 
+    def test_should_be_directed_south_when_back_turn_performed(self):
+        self._simulator_maze_solving_session.turn_back()
+        self.assertEqual(Direction.SOUTH, self._simulator_maze_solving_session.current_direction)
+
     def test_should_be_in_square_x1_y2_when_moving_forward(self):
         self._simulator_maze_solving_session.move_forward()
         self._maze.get_square.assert_called_with(x=1, y=2)

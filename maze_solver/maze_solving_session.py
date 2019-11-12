@@ -41,6 +41,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             move_forward_callback=self.move_forward, 
             turn_right_callback=self.turn_right, 
             turn_left_callback=self.turn_left, 
+            turn_back_callback=self.turn_back, 
             no_turn_callback=self.no_turn
         )
         _wall_detector = SimulatorWallDetector(
@@ -62,6 +63,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         # if it was a real physical thing.
         self._FORWARD_MOTION_TIME_SECONDS = 2
         self._TURN_MOTION_TIME_SECONDS = 2
+        self._BACK_TURN_MOTION_TIME_SECONDS = 3
 
         _simulator_maze_solver = self.create_simulator_maze_solver()
         self._motion_time_in_seconds = 0
@@ -91,6 +93,18 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         else:
             return None
 
+    def get_back_direction(self, front_direction):
+        if Direction.NORTH == front_direction:
+            return Direction.SOUTH
+        elif Direction.EAST == front_direction:
+            return Direction.WEST
+        elif Direction.SOUTH == front_direction:
+            return Direction.NORTH
+        elif Direction.WEST == front_direction:
+            return Direction.EAST
+        else:
+            return None
+
     def is_direction_from_current_square_blocked(self, direction: Direction) -> bool:
         # print('DEBUG - SimulatorMazeSolvingSession: type of direction is {}'.format(type(direction)))
         if direction.value['x'] == 1:
@@ -117,6 +131,10 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
     def turn_left(self):
         self._current_direction = self.get_left_direction(self._current_direction)
         self._motion_time_in_seconds += self._TURN_MOTION_TIME_SECONDS
+
+    def turn_back(self):
+        self._current_direction = self.get_back_direction(self._current_direction)
+        self._motion_time_in_seconds += self._BACK_TURN_MOTION_TIME_SECONDS
 
     def no_turn(self):
         pass

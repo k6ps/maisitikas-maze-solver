@@ -109,23 +109,12 @@ class InNonFinishSquareWithAllSidesBlocked(BaseMazeResolverTest):
         self._maze_solver.next_move()
         self.assert_wall_detector_calls_in_any_order(call.the_mock_wall_detector, self._call_recorder.mock_calls[1:4])
 
-    def test_should_turn_randomly_either_left_or_right_and_check_again(self):
-        _motors_call_counter = MotorsCallCounter()
-        for _ in range(20):
-            self._call_recorder.reset_mock()
-            self._maze_solver.next_move()
-            _motors_call_counter.count_call(self._call_recorder.mock_calls[4])
-            self.assert_wall_detector_calls_in_any_order(call.the_mock_wall_detector, self._call_recorder.mock_calls[5:8])
-        self.assertTrue(_motors_call_counter.left_turns > 3, 'Too few left turns made!')
-        self.assertTrue(_motors_call_counter.right_turns > 3, 'Too few right turns made!')
-        self.assertTrue(_motors_call_counter.no_turns == 0, 'Unexpected no turn made!')
-
-    def test_should_notify_error(self):
+    def test_should_turn_back(self):
         self._maze_solver.next_move()
-        self._outputs.notify.assert_called_with(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
-
-    def test_should_return_true(self):
-        self.assertTrue(self._maze_solver.next_move())
+        self._motors.turn_back.assert_called()
+        self._motors.no_turn.assert_not_called()
+        self._motors.turn_left.assert_not_called()
+        self._motors.turn_right.assert_not_called()
 
 
 class InNonFinishSquareWithOnlyFrontSideUnblocked(BaseMazeResolverTest):

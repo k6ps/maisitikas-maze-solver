@@ -2,10 +2,11 @@ from maze_solver.maze_solver import Motors, FinishDetector, WallDetector, Output
 
 class SimulatorMotors(Motors):
     
-    def __init__(self, move_forward_callback, turn_right_callback, turn_left_callback, no_turn_callback):
+    def __init__(self, move_forward_callback, turn_right_callback, turn_left_callback, turn_back_callback, no_turn_callback):
         self._move_forward_callback = move_forward_callback
         self._turn_right_callback = turn_right_callback
         self._turn_left_callback = turn_left_callback
+        self._turn_back_callback = turn_back_callback
         self._no_turn_callback = no_turn_callback
 
     def move_forward(self):
@@ -16,6 +17,9 @@ class SimulatorMotors(Motors):
 
     def turn_left(self):
         self._turn_left_callback()
+
+    def turn_back(self):
+        self._turn_back_callback()
 
     def no_turn(self):
         self._no_turn_callback()

@@ -12,6 +12,9 @@ class Motors(object):
     def turn_left(self):
         pass
 
+    def turn_back(self):
+        pass
+
     def no_turn(self):
         pass
 
@@ -72,6 +75,9 @@ class MazeSolver(object):
     def turn_left(self):
         self._motors.turn_left()
 
+    def turn_back(self):
+        self._motors.turn_back()
+
     def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
         pass
 
@@ -90,20 +96,8 @@ class MazeSolver(object):
         _right_blocked = self._wall_detector.is_right_blocked()
         # print('DEBUG - RandomWalkerMazeSolver: left blocked={}, front blocked={}, right blocked={}'.format(_left_blocked, _front_blocked, _right_blocked))
 
-        _all_blocked_retries_left = 5
-        while _front_blocked and _left_blocked and _right_blocked and _all_blocked_retries_left > 0:
-            _all_blocked_retries_left -= 1
-            self.call_one_in_random([self.turn_left, self.turn_right])
-            _front_blocked = self._wall_detector.is_front_blocked()
-            _left_blocked = self._wall_detector.is_left_blocked()
-            _right_blocked = self._wall_detector.is_right_blocked()
-        if _all_blocked_retries_left <= 0:
-            # print('DEBUG - RandomWalkerMazeSolver: Cannot move, blocked from all sides!')
-            self._outputs.notify(NotificationType.ERROR, 'Cannot move, blocked from all sides!')
-            return True
-        else:
-            self.next_turn(_left_blocked, _front_blocked, _right_blocked)
-            self.move_forward_to_next_square()
+        self.next_turn(_left_blocked, _front_blocked, _right_blocked)
+        self.move_forward_to_next_square()
         # print('DEBUG - RandomWalkerMazeSolver: Move done, ready for next')
         return False
 
@@ -123,7 +117,9 @@ class MazeSolver(object):
 class RandomWalkerMazeSolver(MazeSolver):
 
     def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
-        if not front_blocked and left_blocked and right_blocked:
+        if front_blocked and left_blocked and right_blocked:
+            self.turn_back()
+        elif not front_blocked and left_blocked and right_blocked:
             self._motors.no_turn()
         elif front_blocked and left_blocked and not right_blocked:
             self.turn_right()
@@ -197,6 +193,18 @@ class CuriousMazeSolver(MazeSolver):
         else:
             return None
 
+    def get_back_direction(self, front_direction):
+        if Direction.NORTH == front_direction:
+            return Direction.SOUTH
+        elif Direction.EAST == front_direction:
+            return Direction.WEST
+        elif Direction.SOUTH == front_direction:
+            return Direction.NORTH
+        elif Direction.WEST == front_direction:
+            return Direction.EAST
+        else:
+            return None
+            
     def get_key_for_square(self, x: int, y: int) -> str:
         return '{}-{}'.format(x, y)
 
@@ -220,6 +228,11 @@ class CuriousMazeSolver(MazeSolver):
         self._current_direction = self.get_right_direction(self._current_direction)
         print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
 
+    def turn_back(self):
+        super().turn_back()
+        self._current_direction = self.get_back_direction(self._current_direction)
+        print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
+
     def move_forward_to_next_square(self):
         super().move_forward_to_next_square()
         self._visited_squares[self.get_key_for_square(self._current_square.x, self._current_square.y)] = self._current_square
@@ -229,7 +242,9 @@ class CuriousMazeSolver(MazeSolver):
         print('DEBUG - CuriousMazeSolver: current square is now x={}, y={}'.format(_new_x, _new_y))
 
     def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
-        if not front_blocked and left_blocked and right_blocked:
+        if front_blocked and left_blocked and right_blocked:
+            self.turn_back()
+        elif not front_blocked and left_blocked and right_blocked:
             self._motors.no_turn()
         elif front_blocked and left_blocked and not right_blocked:
             self.turn_right()
