@@ -430,14 +430,14 @@ class CuriousMazeSolverTest(BaseMazeResolverTest):
         self._maze_solver.next_move()
         self.assertTrue(self._maze_solver.is_visited(x = 2, y = 3))
 
-    # def test_should_mark_square_as_dead_end_when_all_sides_blocked(self):
-    #     self._wall_detector.is_front_blocked.side_effect = [False, True]
-    #     self._wall_detector.is_left_blocked.side_effect = [True, True]
-    #     self._wall_detector.is_right_blocked.side_effect = [True, True]
-    #     self._maze_solver.next_move()
-    #     self._maze_solver.next_move()
-    #     self.assertTrue(self._maze_solver.is_visited(x = 1, y = 2))
-
+    def test_should_mark_square_as_dead_end_when_all_sides_blocked(self):
+        self._wall_detector.is_front_blocked.side_effect = [False, True]
+        self._wall_detector.is_left_blocked.side_effect = [True, True]
+        self._wall_detector.is_right_blocked.side_effect = [True, True]
+        self._maze_solver.next_move()
+        self.assertFalse(self._maze_solver.is_dead_end(x = 1, y = 2))
+        self._maze_solver.next_move()
+        self.assertTrue(self._maze_solver.is_dead_end(x = 1, y = 2))
 
 if __name__ == '__main__':
     unittest.main()

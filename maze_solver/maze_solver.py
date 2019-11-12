@@ -146,9 +146,18 @@ class Square(object):
     def y(self) -> int:
         return self._y
 
+    @property
+    def is_dead_end(self) -> bool:
+        return self._is_dead_end
+
+    @is_dead_end.setter
+    def is_dead_end(self, value: bool):
+        self._is_dead_end = value
+
     def __init__(self, x: int, y: int):
         self._x = x
         self._y = y
+        self._is_dead_end = False
 
 
 # Prefers unexplored paths, remembers and avoids dead-ends - but can still 
@@ -168,6 +177,13 @@ class CuriousMazeSolver(MazeSolver):
 
     def is_visited(self, x: int, y: int) -> bool:
         return self.get_key_for_square(x, y) in self._visited_squares
+
+    def is_dead_end(self, x: int, y: int) -> bool:
+        _key = self.get_key_for_square(x, y)
+        if _key not in self._visited_squares:
+            return False
+        else:
+            return self._visited_squares[_key].is_dead_end
 
     def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 9999):
         super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
@@ -201,6 +217,7 @@ class CuriousMazeSolver(MazeSolver):
 
     def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
         if front_blocked and left_blocked and right_blocked:
+            self._current_square.is_dead_end = True
             self.turn_back()
         elif not front_blocked and left_blocked and right_blocked:
             self._motors.no_turn()
@@ -234,4 +251,3 @@ class CuriousMazeSolver(MazeSolver):
                 self.turn_right()
             # elif random_int == 3:
             #     self._motors.no_turn()
-        
