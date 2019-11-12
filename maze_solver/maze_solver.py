@@ -79,8 +79,47 @@ class MazeSolver(object):
     def turn_back(self):
         self._motors.turn_back()
 
-    def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
+    def next_turn_none_unblocked(self):
+        self.turn_back()
+
+    def next_turn_only_front_unblocked(self):
+        self._motors.no_turn()
+
+    def next_turn_only_right_unblocked(self):
+        self.turn_right()
+
+    def next_turn_only_left_unblocked(self):
+        self.turn_left()
+
+    def next_turn_left_and_right_unblocked(self):
         pass
+
+    def next_turn_front_and_right_unblocked(self):
+        pass
+
+    def next_turn_front_and_left_unblocked(self):
+        pass
+
+    def next_turn_all_unblocked(self):
+        pass
+
+    def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
+        if front_blocked and left_blocked and right_blocked:
+            self.next_turn_none_unblocked()
+        elif not front_blocked and left_blocked and right_blocked:
+            self.next_turn_only_front_unblocked()
+        elif front_blocked and left_blocked and not right_blocked:
+            self.next_turn_only_right_unblocked()
+        elif front_blocked and not left_blocked and right_blocked:
+            self.next_turn_only_left_unblocked()
+        elif front_blocked and not left_blocked and not right_blocked:
+            self.next_turn_left_and_right_unblocked()
+        elif not front_blocked and not left_blocked and right_blocked:
+            self.next_turn_front_and_left_unblocked()
+        elif not front_blocked and left_blocked and not right_blocked:
+            self.next_turn_front_and_right_unblocked()
+        elif not front_blocked and not left_blocked and not right_blocked:
+            self.next_turn_all_unblocked()
 
     def move_forward_to_next_square(self):
         self._motors.move_forward()
@@ -117,23 +156,17 @@ class MazeSolver(object):
 
 class RandomWalkerMazeSolver(MazeSolver):
 
-    def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
-        if front_blocked and left_blocked and right_blocked:
-            self.turn_back()
-        elif not front_blocked and left_blocked and right_blocked:
-            self._motors.no_turn()
-        elif front_blocked and left_blocked and not right_blocked:
-            self.turn_right()
-        elif front_blocked and not left_blocked and right_blocked:
-            self.turn_left()
-        elif front_blocked and not left_blocked and not right_blocked:
-            self.call_one_in_random([self.turn_left, self.turn_right])
-        elif not front_blocked and not left_blocked and right_blocked:
-            self.call_one_in_random([self.turn_left, self._motors.no_turn])
-        elif not front_blocked and left_blocked and not right_blocked:
-            self.call_one_in_random([self.turn_right, self._motors.no_turn])
-        elif not front_blocked and not left_blocked and not right_blocked:
-            self.call_one_in_random([self.turn_left, self.turn_right, self._motors.no_turn])
+    def next_turn_left_and_right_unblocked(self):
+        self.call_one_in_random([self.turn_left, self.turn_right])
+
+    def next_turn_front_and_right_unblocked(self):
+        self.call_one_in_random([self.turn_right, self._motors.no_turn])
+
+    def next_turn_front_and_left_unblocked(self):
+        self.call_one_in_random([self.turn_left, self._motors.no_turn])
+
+    def next_turn_all_unblocked(self):
+        self.call_one_in_random([self.turn_left, self.turn_right, self._motors.no_turn])
 
 
 class Square(object):
@@ -154,15 +187,15 @@ class Square(object):
     def is_dead_end(self, value: bool):
         self._is_dead_end = value
 
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int, is_dead_end: bool = False):
         self._x = x
         self._y = y
-        self._is_dead_end = False
+        self._is_dead_end = is_dead_end
 
 
 # Prefers unexplored paths, remembers and avoids dead-ends - but can still 
 # randomly wander in already explored areas.
-class CuriousMazeSolver(MazeSolver):
+class CuriousMazeSolver(RandomWalkerMazeSolver):
 
     @property
     def current_square(self) -> Square:
@@ -191,6 +224,7 @@ class CuriousMazeSolver(MazeSolver):
         _start_square = Square(x = 1, y = 1)
         self._current_square = _start_square
         self._current_direction = Direction.NORTH
+        self._last_square_was_dead_end = False
 
     def turn_left(self):
         super().turn_left()
@@ -207,47 +241,93 @@ class CuriousMazeSolver(MazeSolver):
         self._current_direction = self._current_direction.get_back_direction()
         print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
 
+    def add_square_as_visited(self, square):
+        self._visited_squares[self.get_key_for_square(square.x, square.y)] = square
+
     def move_forward_to_next_square(self):
         super().move_forward_to_next_square()
-        self._visited_squares[self.get_key_for_square(self._current_square.x, self._current_square.y)] = self._current_square
+        self.add_square_as_visited(self._current_square)
         _new_x = self._current_square.x + self._current_direction.value['x']
         _new_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = Square(x = _new_x, y = _new_y)
         print('DEBUG - CuriousMazeSolver: current square is now x={}, y={}'.format(_new_x, _new_y))
 
-    def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
-        if front_blocked and left_blocked and right_blocked:
-            self._current_square.is_dead_end = True
-            self.turn_back()
-        elif not front_blocked and left_blocked and right_blocked:
-            self._motors.no_turn()
-        elif front_blocked and left_blocked and not right_blocked:
+    def is_dead_end_in_direction(self, direction: Direction) -> bool:
+        return self.is_dead_end(
+            self._current_square.x + direction.value['x'],
+            self._current_square.y + direction.value['y']
+        )
+
+    def mark_current_square_as_dead_end(self):
+        self._current_square.is_dead_end = True
+        self._last_square_was_dead_end = True
+        print('DEBUG - CuriousMazeSolver: square is dead end!! x={}, y={}'.format(
+            self._current_square.x, 
+            self._current_square.y
+        ))
+
+    def is_left_dead_end(self) -> bool:
+        return self.is_dead_end_in_direction(self._current_direction.get_left_direction())
+
+    def is_right_dead_end(self) -> bool:
+        return self.is_dead_end_in_direction(self._current_direction.get_right_direction())
+
+    def is_front_dead_end(self) -> bool:
+        return self.is_dead_end_in_direction(self._current_direction)
+
+    def next_turn_none_unblocked(self):
+        self.mark_current_square_as_dead_end()
+        super().next_turn_none_unblocked()
+
+    def next_turn_only_front_unblocked(self):
+        if self._last_square_was_dead_end:
+            self.mark_current_square_as_dead_end()
+        super().next_turn_only_front_unblocked()
+
+    def next_turn_only_right_unblocked(self):
+        if self._last_square_was_dead_end:
+            self.mark_current_square_as_dead_end()
+        super().next_turn_only_right_unblocked()
+
+    def next_turn_only_left_unblocked(self):
+        if self._last_square_was_dead_end:
+            self.mark_current_square_as_dead_end()
+        super().next_turn_only_left_unblocked()
+
+    def next_turn_left_and_right_unblocked(self):
+        if not self.is_right_dead_end() and self.is_left_dead_end():
             self.turn_right()
-        elif front_blocked and not left_blocked and right_blocked:
+        elif self.is_right_dead_end() and not self.is_left_dead_end():
             self.turn_left()
-        elif front_blocked and not left_blocked and not right_blocked:
-            random_int = random.randint(1,2)
-            if random_int == 1:
+        else:
+            self._last_square_was_dead_end = False
+            super().next_turn_left_and_right_unblocked()
+
+    def next_turn_front_and_right_unblocked(self):
+        if not self.is_right_dead_end() and self.is_front_dead_end():
+            self.turn_right()
+        elif self.is_right_dead_end() and not self.is_front_dead_end():
+            self._motors.no_turn()
+        else:
+            self._last_square_was_dead_end = False
+            super().next_turn_front_and_right_unblocked()
+
+    def next_turn_front_and_left_unblocked(self):
+        if not self.is_left_dead_end() and self.is_front_dead_end():
+            self.turn_left()
+        elif self.is_left_dead_end() and not self.is_front_dead_end():
+            self._motors.no_turn()
+        else:
+            self._last_square_was_dead_end = False
+            super().next_turn_front_and_left_unblocked()
+
+    def next_turn_all_unblocked(self):
+        if not self.is_left_dead_end() and self.is_front_dead_end() and self.is_right_dead_end():
                 self.turn_left()
-            elif random_int == 2:
+        elif self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
                 self.turn_right()
-        elif not front_blocked and not left_blocked and right_blocked:
-            random_int = random.randint(1,2)
-            if random_int == 1:
-                self.turn_left()
-            # elif random_int == 2:
-            #     self._motors.no_turn()
-        elif not front_blocked and left_blocked and not right_blocked:
-            random_int = random.randint(1,2)
-            if random_int == 1:
-                self.turn_right()
-            # elif random_int == 2:
-            #     self._motors.no_turn()
-        elif not front_blocked and not left_blocked and not right_blocked:
-            random_int = random.randint(1,3)
-            if random_int == 1:
-                self.turn_left()
-            elif random_int == 2:
-                self.turn_right()
-            # elif random_int == 3:
-            #     self._motors.no_turn()
+        elif self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
+                self._motors.no_turn()
+        else:
+            self._last_square_was_dead_end = False
+            super().next_turn_all_unblocked()
