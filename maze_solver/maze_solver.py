@@ -258,6 +258,12 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self._current_square.y + direction.value['y']
         )
 
+    def is_visited_in_direction(self, direction: Direction) -> bool:
+        return self.is_visited(
+            self._current_square.x + direction.value['x'],
+            self._current_square.y + direction.value['y']
+        )
+
     def mark_current_square_as_dead_end(self):
         self._current_square.is_dead_end = True
         self._last_square_was_dead_end = True
@@ -274,6 +280,15 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
 
     def is_front_dead_end(self) -> bool:
         return self.is_dead_end_in_direction(self._current_direction)
+
+    def is_left_visited(self) -> bool:
+        return self.is_visited_in_direction(self._current_direction.get_left_direction())
+
+    def is_right_visited(self) -> bool:
+        return self.is_visited_in_direction(self._current_direction.get_right_direction())
+
+    def is_front_visited(self) -> bool:
+        return self.is_visited_in_direction(self._current_direction)
 
     def next_turn_none_unblocked(self):
         self.mark_current_square_as_dead_end()
@@ -301,7 +316,12 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_only_left_unblocked()
         else:
             self._last_square_was_dead_end = False
-            super().next_turn_left_and_right_unblocked()
+            if self.is_right_visited() and not self.is_left_visited():
+                super().next_turn_only_left_unblocked()
+            elif not self.is_right_visited() and self.is_left_visited():
+                super().next_turn_only_right_unblocked()
+            else:
+                super().next_turn_left_and_right_unblocked()
 
     def next_turn_front_and_right_unblocked(self):
         if not self.is_right_dead_end() and self.is_front_dead_end():
@@ -310,7 +330,12 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_only_front_unblocked()
         else:
             self._last_square_was_dead_end = False
-            super().next_turn_front_and_right_unblocked()
+            if self.is_right_visited() and not self.is_front_visited():
+                super().next_turn_only_front_unblocked()
+            elif not self.is_right_visited() and self.is_front_visited():
+                super().next_turn_only_right_unblocked()
+            else:
+                super().next_turn_front_and_right_unblocked()
 
     def next_turn_front_and_left_unblocked(self):
         if not self.is_left_dead_end() and self.is_front_dead_end():
@@ -319,7 +344,12 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_only_front_unblocked()
         else:
             self._last_square_was_dead_end = False
-            super().next_turn_front_and_left_unblocked()
+            if self.is_left_visited() and not self.is_front_visited():
+                super().next_turn_only_front_unblocked()
+            elif not self.is_left_visited() and self.is_front_visited():
+                super().next_turn_only_left_unblocked()
+            else:
+                super().next_turn_front_and_left_unblocked()
 
     def next_turn_all_unblocked(self):
         if not self.is_left_dead_end() and self.is_front_dead_end() and self.is_right_dead_end():
@@ -330,13 +360,41 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_only_front_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end() and not self.is_right_dead_end():
             self._last_square_was_dead_end = False
-            super().next_turn_front_and_right_unblocked()
+            if self.is_right_visited() and not self.is_front_visited():
+                super().next_turn_only_front_unblocked()
+            elif not self.is_right_visited() and self.is_front_visited():
+                super().next_turn_only_right_unblocked()
+            else:
+                super().next_turn_front_and_right_unblocked()
         elif not self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
             self._last_square_was_dead_end = False
-            super().next_turn_left_and_right_unblocked()
+            if self.is_right_visited() and not self.is_left_visited():
+                super().next_turn_only_left_unblocked()
+            elif not self.is_right_visited() and self.is_left_visited():
+                super().next_turn_only_right_unblocked()
+            else:
+                super().next_turn_left_and_right_unblocked()
         elif not self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
             self._last_square_was_dead_end = False
-            super().next_turn_front_and_left_unblocked()
+            if self.is_front_visited() and not self.is_left_visited():
+                super().next_turn_only_left_unblocked()
+            elif not self.is_front_visited() and self.is_left_visited():
+                super().next_turn_only_front_unblocked()
+            else:
+                super().next_turn_front_and_left_unblocked()
         else:
             self._last_square_was_dead_end = False
-            super().next_turn_all_unblocked()
+            if self.is_front_visited() and self.is_left_visited() and not self.is_right_visited():
+                super().next_turn_only_right_unblocked()
+            elif self.is_front_visited() and not self.is_left_visited() and self.is_right_visited():
+                super().next_turn_only_left_unblocked()
+            elif not self.is_front_visited() and self.is_left_visited() and self.is_right_visited():
+                super().next_turn_only_front_unblocked()
+            elif self.is_front_visited() and not self.is_left_visited() and not self.is_right_visited():
+                super().next_turn_left_and_right_unblocked()
+            elif not self.is_front_visited() and self.is_left_visited() and not self.is_right_visited():
+                super().next_turn_front_and_right_unblocked()
+            elif not self.is_front_visited() and not self.is_left_visited() and self.is_right_visited():
+                super().next_turn_front_and_left_unblocked()
+            else:
+                super().next_turn_all_unblocked()
