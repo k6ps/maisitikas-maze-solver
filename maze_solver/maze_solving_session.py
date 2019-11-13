@@ -25,6 +25,7 @@ class MazeSolvingSession(object):
         # print('DEBUG - MazeSolvingSession: start direction is {}'.format( self._current_direction))
         _move_count = self._maze_solver.start()
         print('INFO - MazeSolvingSession: total move count={}'.format(_move_count))
+        return _move_count
 
 
 class SimulatorMazeSolvingSession(MazeSolvingSession):
@@ -79,7 +80,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         _next_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = self._maze.get_square(x = _next_x, y = _next_y)
         self._motion_time_in_seconds += self._FORWARD_MOTION_TIME_SECONDS
-        print('DEBUG - SimulatorMazeSolvingSession: moving to square x={}, y={}'.format(_next_x, _next_y))
+        # print('DEBUG - SimulatorMazeSolvingSession: moving to square x={}, y={}'.format(_next_x, _next_y))
 
     def turn_right(self):
         self._current_direction = self._current_direction.get_right_direction()
@@ -114,5 +115,10 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         print('Maze solver: {} - {}'.format(type, message))
 
     def start(self):
-        super().start()
-        print('DEBUG - SimulatorMazeSolvingSession: total motion time={}'.format(self._motion_time_in_seconds))
+        _move_count = super().start()
+        # print('DEBUG - SimulatorMazeSolvingSession: total motion time={}'.format(self._motion_time_in_seconds))
+        print('DEBUG - SimulatorMazeSolvingSession: move count={}, motion time={}, '.format(
+            _move_count, 
+            self._motion_time_in_seconds
+        ))
+        return {'move_count': _move_count, 'motion_time': self._motion_time_in_seconds}

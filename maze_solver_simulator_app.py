@@ -342,9 +342,18 @@ def create_a_real_16_to_16_beast() -> Maze:
     ]
     return Maze(_squares)
 
+_EXPERIMENT_COUNT = 100
+
 # maze = create_simple_2_to_2_maze()
 # maze = create_simple_3_to_3_maze()
 # maze = create_6_to_6_maze()
 maze = create_a_real_16_to_16_beast()
-simulator_session = SimulatorMazeSolvingSession(maze)
-simulator_session.start()
+_total_count = 0
+_total_motion_time = 0
+for i in range(1, _EXPERIMENT_COUNT + 1):
+    print(i)
+    simulator_session = SimulatorMazeSolvingSession(maze)
+    _results = simulator_session.start()
+    _total_count += _results['move_count']
+    _total_motion_time += _results['motion_time']
+print('=== avg move count={}, avg motion time={}'.format(_total_count / _EXPERIMENT_COUNT, _total_motion_time / _EXPERIMENT_COUNT))
