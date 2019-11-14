@@ -218,13 +218,16 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         else:
             return self._visited_squares[_key].is_dead_end
 
-    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 9999):
-        super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
+    def reset_to_start_and_forget_everything(self):
         self._visited_squares = {}
         _start_square = Square(x = 1, y = 1)
         self._current_square = _start_square
         self._current_direction = Direction.NORTH
         self._last_square_was_dead_end = False
+
+    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 9999):
+        super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
+        self.reset_to_start_and_forget_everything()
 
     def turn_left(self):
         super().turn_left()
@@ -352,13 +355,18 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
                 super().next_turn_front_and_left_unblocked()
 
     def next_turn_all_unblocked(self):
+        # print('DEBUG - CuriousMazeSolver: ALL directions are unblocked')
         if not self.is_left_dead_end() and self.is_front_dead_end() and self.is_right_dead_end():
+            # print('DEBUG - CuriousMazeSolver: front and right are dead ends')
             self.next_turn_only_left_unblocked()
         elif self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
+            # print('DEBUG - CuriousMazeSolver: front and left are dead ends')
             self.next_turn_only_right_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
+            # print('DEBUG - CuriousMazeSolver: right and left are dead ends')
             self.next_turn_only_front_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end() and not self.is_right_dead_end():
+            # print('DEBUG - CuriousMazeSolver: left is dead end')
             self._last_square_was_dead_end = False
             if self.is_right_visited() and not self.is_front_visited():
                 super().next_turn_only_front_unblocked()
@@ -367,6 +375,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             else:
                 super().next_turn_front_and_right_unblocked()
         elif not self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
+            # print('DEBUG - CuriousMazeSolver: front is dead end')
             self._last_square_was_dead_end = False
             if self.is_right_visited() and not self.is_left_visited():
                 super().next_turn_only_left_unblocked()
@@ -375,6 +384,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             else:
                 super().next_turn_left_and_right_unblocked()
         elif not self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
+            # print('DEBUG - CuriousMazeSolver: right is dead end')
             self._last_square_was_dead_end = False
             if self.is_front_visited() and not self.is_left_visited():
                 super().next_turn_only_left_unblocked()
@@ -384,6 +394,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
                 super().next_turn_front_and_left_unblocked()
         else:
             self._last_square_was_dead_end = False
+            # print('DEBUG - CuriousMazeSolver: none are dead ends')
             if self.is_front_visited() and self.is_left_visited() and not self.is_right_visited():
                 super().next_turn_only_right_unblocked()
             elif self.is_front_visited() and not self.is_left_visited() and self.is_right_visited():
