@@ -29,4 +29,5 @@ python .\maze_solver_simulator_app.py
 
 1. Add unit test for preferring unexplored paths to explored ones.
 2. Add preference to directions that lead to central squares.
-3. Add detection of cycles and marking them as dead ends.
+3. Add preference to making no turn over turning left or right.
+4. Add detection of cycles and marking them as dead ends.
