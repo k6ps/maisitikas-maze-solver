@@ -2,7 +2,7 @@
 
 Running a Python runtime in Docker:
 ```
-docker run -i -t --rm --name lehm-madu-uss -v /home/k6ps/windows_user_home/projects/maze-solver-simulator:/app python:3.8-alpine3.10 /bin/bash
+docker run -i -t --rm --name my-python-box -v /home/me/my-projects/maze-solver-simulator:/app python:3.8-alpine3.10 /bin/bash
 ```
 Running unit tests:
 ```
@@ -27,6 +27,9 @@ python .\maze_solver_simulator_app.py
 
 # To Do
 
-1. Add preference to directions that lead to central squares.
-2. Add preference to making no turn over turning left or right.
-3. Add detection of cycles and marking them as dead ends.
+1. Add unit tests for preference to directions that lead to central squares.
+2. Fix and add unit tests for preference to making no turn over turning left or right.
+3. Add proper logging
+4. Add memorzing the path taken.
+5. Figure out some less tedious and error-prone way to create new mazes. Maybe machine-readable ASCII art?
+6. Add detection and avoidance of cycles.
