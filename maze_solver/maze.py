@@ -45,14 +45,19 @@ class MazeSquare(object):
 
 class Maze(object):
 
+    @property
+    def name(self) -> str:
+        return self._name
+
     def get_start_square(self) -> MazeSquare:
         return self._start_square
 
     def get_key_for_square(self, x: int, y: int) -> str:
         return '{}-{}'.format(x, y)
 
-    def __init__(self, squares: list):
+    def __init__(self, squares: list, name: str = ''):
         self._squares = squares
+        self._name = name
         self._squares_dict = {}
         for _square in self._squares:
             _key = self.get_key_for_square(_square.x, _square.y)

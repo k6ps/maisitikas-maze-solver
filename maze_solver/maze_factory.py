@@ -7,7 +7,7 @@ def create_simple_2_to_2_maze() -> Maze:
         MazeSquare(x = 2, y = 1, y_plus = True, x_minus = True),
         MazeSquare(x = 2, y = 2, y_minus = True, is_finish = True)
     ]
-    return Maze(_squares)
+    return Maze(_squares, name='Minimal 2-to-2')
 
 def create_simple_3_to_3_maze() -> Maze:
     _squares = [
@@ -21,7 +21,7 @@ def create_simple_3_to_3_maze() -> Maze:
         MazeSquare(x = 3, y = 2, y_plus = True, x_minus = True, y_minus = True),
         MazeSquare(x = 3, y = 3, y_minus = True, is_finish = True)
     ]
-    return Maze(_squares)
+    return Maze(_squares, name='3-to-3')
 
 def create_6_to_6_maze() -> Maze:
     _squares = [
@@ -62,7 +62,7 @@ def create_6_to_6_maze() -> Maze:
         MazeSquare(x = 6, y = 5, y_plus = True, y_minus = True),
         MazeSquare(x = 6, y = 6, y_minus = True),
     ]
-    return Maze(_squares)
+    return Maze(_squares, name='6-to-6')
 
 def create_a_real_16_to_16_beast() -> Maze:
     _squares = [
@@ -338,7 +338,7 @@ def create_a_real_16_to_16_beast() -> Maze:
         MazeSquare(x = 16, y = 15, y_plus = True, y_minus = True),
         MazeSquare(x = 16, y = 16, x_minus = True, y_minus = True)
     ]
-    return Maze(_squares)
+    return Maze(_squares, name='A Real Beast')
 
 def create_robotex_cyprus_2017_maze() -> Maze:
     _squares = [
@@ -614,4 +614,4 @@ def create_robotex_cyprus_2017_maze() -> Maze:
         MazeSquare(x = 16, y = 15, y_minus = True),
         MazeSquare(x = 16, y = 16, x_minus = True)
     ]
-    return Maze(_squares)
+    return Maze(_squares, name='Robotex Cyprus 2017')

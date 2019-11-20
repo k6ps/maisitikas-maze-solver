@@ -20,4 +20,7 @@ for _ in range(_EXPERIMENT_COUNT):
     _results = simulator_session.start()
     _total_count += _results['move_count']
     _total_motion_time += _results['motion_time']
+print('=================================================================')
+print('=== maze={}'.format(maze.name))
 print('=== avg move count={}, avg motion time={}'.format(_total_count / _EXPERIMENT_COUNT, _total_motion_time / _EXPERIMENT_COUNT))
+print('=================================================================')
