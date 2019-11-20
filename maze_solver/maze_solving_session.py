@@ -24,13 +24,20 @@ class MazeSolvingSession(object):
         # print('DEBUG - MazeSolvingSession: start square is x={}, y={}'.format(self._current_square.x, self._current_square.y))
         # print('DEBUG - MazeSolvingSession: start direction is {}'.format( self._current_direction))
         _move_count = self._maze_solver.start()
-        print('INFO - MazeSolvingSession: total move count={}'.format(_move_count))
+        # print('INFO - MazeSolvingSession: total move count={}'.format(_move_count))
         return _move_count
 
 
 class SimulatorMazeSolvingSession(MazeSolvingSession):
 
-    def create_simulator_maze_solver(self):
+    def create_simulator_maze_solver(
+        self,
+        prefer_non_dead_ends_weight,
+        prefer_unvisited_paths_weight,
+        prefer_closer_to_center_weight,
+        prefer_no_turns_weight,
+        max_moves
+    ):
         _motors = SimulatorMotors(
             move_forward_callback=self.move_forward, 
             turn_right_callback=self.turn_right, 
@@ -49,17 +56,36 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             motors=_motors, 
             wall_detector=_wall_detector, 
             finish_detector=_finish_detector, 
-            outputs=_outputs
+            outputs=_outputs,
+            prefer_non_dead_ends_weight=prefer_non_dead_ends_weight,
+            prefer_unvisited_paths_weight=prefer_unvisited_paths_weight,
+            prefer_closer_to_center_weight=prefer_closer_to_center_weight,
+            prefer_no_turns_weight=prefer_no_turns_weight,
+            max_moves=max_moves
         )
 
-    def __init__(self, maze):
+    def __init__(
+        self, 
+        maze,
+        prefer_non_dead_ends_weight: int = 10,
+        prefer_unvisited_paths_weight: int = 2,
+        prefer_closer_to_center_weight: int = 3,
+        prefer_no_turns_weight: int = 1,
+        max_moves: int = 999
+    ):
         # These are the supposed average times it would take to move, 
         # if it was a real physical thing.
-        self._FORWARD_MOTION_TIME_SECONDS = 2
-        self._TURN_MOTION_TIME_SECONDS = 2
-        self._BACK_TURN_MOTION_TIME_SECONDS = 3
+        self._FORWARD_MOTION_TIME_SECONDS = 1.1
+        self._TURN_MOTION_TIME_SECONDS = 0.9
+        self._BACK_TURN_MOTION_TIME_SECONDS = 1.7
 
-        _simulator_maze_solver = self.create_simulator_maze_solver()
+        _simulator_maze_solver = self.create_simulator_maze_solver(
+            prefer_non_dead_ends_weight,
+            prefer_unvisited_paths_weight,
+            prefer_closer_to_center_weight,
+            prefer_no_turns_weight,
+            max_moves
+        )
         self._motion_time_in_seconds = 0
         super().__init__(maze, _simulator_maze_solver)
 
@@ -116,7 +142,6 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
 
     def start(self):
         _move_count = super().start()
-        # print('DEBUG - SimulatorMazeSolvingSession: total motion time={}'.format(self._motion_time_in_seconds))
         print('DEBUG - SimulatorMazeSolvingSession: move count={}, motion time={}, '.format(
             _move_count, 
             self._motion_time_in_seconds
