@@ -205,6 +205,38 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def current_direction(self) -> Direction:
         return self._current_direction
 
+    @property
+    def prefer_non_dead_ends_weight(self) -> int:
+        return self._prefer_non_dead_ends_weight
+
+    @prefer_non_dead_ends_weight.setter
+    def prefer_non_dead_ends_weight(self, value: int):
+        self._prefer_non_dead_ends_weight = value
+
+    @property
+    def prefer_unvisited_paths_weight(self) -> int:
+        return self._prefer_unvisited_paths_weight
+
+    @prefer_unvisited_paths_weight.setter
+    def prefer_unvisited_paths_weight(self, value: int):
+        self._prefer_unvisited_paths_weight = value
+
+    @property
+    def prefer_closer_to_center_weight(self) -> int:
+        return self._prefer_closer_to_center_weight
+
+    @prefer_closer_to_center_weight.setter
+    def prefer_closer_to_center_weight(self, value: int):
+        self._prefer_closer_to_center_weight = value
+
+    @property
+    def prefer_no_turns_weight(self) -> int:
+        return self._prefer_no_turns_weight
+
+    @prefer_no_turns_weight.setter
+    def prefer_no_turns_weight(self, value: int):
+        self._prefer_no_turns_weight = value
+
     def get_key_for_square(self, x: int, y: int) -> str:
         return '{}-{}'.format(x, y)
 
@@ -225,9 +257,24 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         self._current_direction = Direction.NORTH
         self._last_square_was_dead_end = False
 
-    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 9999):
+    def __init__(
+        self, 
+        motors: Motors, 
+        wall_detector: WallDetector, 
+        finish_detector: FinishDetector, 
+        outputs: Outputs, 
+        prefer_non_dead_ends_weight: int = 10,
+        prefer_unvisited_paths_weight: int = 2,
+        prefer_closer_to_center_weight: int = 3,
+        prefer_no_turns_weight: int = 1,
+        max_moves: int = 9999
+    ):
         super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
         self.reset_to_start_and_forget_everything()
+        self._prefer_non_dead_ends_weight = prefer_non_dead_ends_weight
+        self._prefer_unvisited_paths_weight = prefer_unvisited_paths_weight
+        self._prefer_closer_to_center_weight = prefer_closer_to_center_weight
+        self._prefer_no_turns_weight = prefer_no_turns_weight
 
     def turn_left(self):
         super().turn_left()
@@ -270,10 +317,10 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def mark_current_square_as_dead_end(self):
         self._current_square.is_dead_end = True
         self._last_square_was_dead_end = True
-        print('DEBUG - CuriousMazeSolver: !! square is dead end! x={}, y={} !!'.format(
-            self._current_square.x, 
-            self._current_square.y
-        ))
+        # print('DEBUG - CuriousMazeSolver: Square is dead end! x={}, y={} !!'.format(
+        #     self._current_square.x, 
+        #     self._current_square.y
+        # ))
 
     def is_left_dead_end(self) -> bool:
         return self.is_dead_end_in_direction(self._current_direction.get_left_direction())
@@ -292,6 +339,52 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
 
     def is_front_visited(self) -> bool:
         return self.is_visited_in_direction(self._current_direction)
+
+    def get_distance_from_center(self, x: int, y: int) -> int:
+        # assume center is composed of squares x=8,y=8; x=9,y=8; x=8,y=9; x=9,y=9
+        # TODO: this obviously breaks when maze size is not 16 x 16!
+        _min_x = min(abs(x - 9), abs(x - 8))
+        _min_y = min(abs(y - 9), abs(y - 8))
+        return max(_min_x, _min_y)
+
+    def get_distance_from_center_in_direction(self, direction: Direction) -> int:
+        return self.get_distance_from_center(
+            self._current_square.x + direction.value['x'],
+            self._current_square.y + direction.value['y']
+        )
+
+    def get_distance_from_center_in_left(self) -> int:
+        return self.get_distance_from_center_in_direction(self._current_direction.get_left_direction())
+
+    def get_distance_from_center_in_right(self) -> int:
+        return self.get_distance_from_center_in_direction(self._current_direction.get_right_direction())
+
+    def get_distance_from_center_in_front(self) -> int:
+        return self.get_distance_from_center_in_direction(self._current_direction)
+
+    def get_score_left(self) -> int:
+        _no_dead_end_score = self._prefer_non_dead_ends_weight if not self.is_left_dead_end() else 0
+        _unvisited_score = self._prefer_unvisited_paths_weight if not self.is_left_visited() else 0
+        _closeness_to_center = 8 - self.get_distance_from_center_in_left()
+        _closeness_to_center_score = self._prefer_closer_to_center_weight * (_closeness_to_center / 8)
+        _no_turns_score = 0
+        return _no_dead_end_score + _unvisited_score + _closeness_to_center_score + _no_turns_score
+
+    def get_score_right(self) -> int:
+        _no_dead_end_score = self._prefer_non_dead_ends_weight if not self.is_right_dead_end() else 0
+        _unvisited_score = self._prefer_unvisited_paths_weight if not self.is_right_visited() else 0
+        _closeness_to_center = 8 - self.get_distance_from_center_in_right()
+        _closeness_to_center_score = self._prefer_closer_to_center_weight * (_closeness_to_center / 8)
+        _no_turns_score = 0
+        return _no_dead_end_score + _unvisited_score + _closeness_to_center_score + _no_turns_score
+
+    def get_score_front(self) -> int:
+        _no_dead_end_score = self._prefer_non_dead_ends_weight if not self.is_front_dead_end() else 0
+        _unvisited_score = self._prefer_unvisited_paths_weight if not self.is_front_visited() else 0
+        _closeness_to_center = 8 - self.get_distance_from_center_in_front()
+        _closeness_to_center_score = self._prefer_closer_to_center_weight * (_closeness_to_center / 8)
+        _no_turns_score = self._prefer_no_turns_weight
+        return _no_dead_end_score + _unvisited_score + _closeness_to_center_score + _no_turns_score
 
     def next_turn_none_unblocked(self):
         self.mark_current_square_as_dead_end()
@@ -312,6 +405,58 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.mark_current_square_as_dead_end()
         super().next_turn_only_left_unblocked()
 
+    def next_turn_based_on_scores_between_left_and_right(self):
+        _left_score = self.get_score_left()
+        _right_score = self.get_score_right()
+        if _left_score > _right_score:
+            super().next_turn_only_left_unblocked()
+        elif _left_score < _right_score:
+            super().next_turn_only_right_unblocked()
+        else:
+            super().next_turn_left_and_right_unblocked()
+
+    def next_turn_based_on_scores_between_front_and_right(self):
+        _front_score = self.get_score_front()
+        _right_score = self.get_score_right()
+        if _front_score > _right_score:
+            super().next_turn_only_front_unblocked()
+        elif _front_score < _right_score:
+            super().next_turn_only_right_unblocked()
+        else:
+            super().next_turn_front_and_right_unblocked()
+
+    def next_turn_based_on_scores_between_front_and_left(self):
+        # print('DEBUG - CuriousMazeSolver: next_turn_based_on_scores_between_front_and_left')
+        _front_score = self.get_score_front()
+        # print('DEBUG - CuriousMazeSolver: front_score={}'.format(_front_score))
+        _left_score = self.get_score_left()
+        # print('DEBUG - CuriousMazeSolver: left_score={}'.format(_left_score))
+        if _front_score > _left_score:
+            super().next_turn_only_front_unblocked()
+        elif _front_score < _left_score:
+            super().next_turn_only_left_unblocked()
+        else:
+            super().next_turn_front_and_left_unblocked()
+
+    def next_turn_based_on_scores_between_all_directions(self):
+        _front_score = self.get_score_front()
+        _left_score = self.get_score_left()
+        _right_score = self.get_score_right()
+        if _front_score > _right_score and _front_score > _left_score:
+            super().next_turn_only_front_unblocked()
+        elif _left_score > _right_score and _left_score > _front_score:
+            super().next_turn_only_left_unblocked()
+        elif _right_score > _left_score and _right_score > _front_score:
+            super().next_turn_only_right_unblocked()
+        elif _front_score == _left_score and _front_score > _right_score:
+            super().next_turn_front_and_left_unblocked()
+        elif _left_score == _right_score and _left_score > _front_score:
+            super().next_turn_left_and_right_unblocked()
+        elif _front_score == _right_score and _front_score > _left_score:
+            super().next_turn_front_and_right_unblocked()
+        else:
+            super().next_turn_all_unblocked()
+
     def next_turn_left_and_right_unblocked(self):
         if not self.is_right_dead_end() and self.is_left_dead_end():
             self.next_turn_only_right_unblocked()
@@ -319,12 +464,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_only_left_unblocked()
         else:
             self._last_square_was_dead_end = False
-            if self.is_right_visited() and not self.is_left_visited():
-                super().next_turn_only_left_unblocked()
-            elif not self.is_right_visited() and self.is_left_visited():
-                super().next_turn_only_right_unblocked()
-            else:
-                super().next_turn_left_and_right_unblocked()
+            self.next_turn_based_on_scores_between_left_and_right()
 
     def next_turn_front_and_right_unblocked(self):
         if not self.is_right_dead_end() and self.is_front_dead_end():
@@ -333,26 +473,17 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_only_front_unblocked()
         else:
             self._last_square_was_dead_end = False
-            if self.is_right_visited() and not self.is_front_visited():
-                super().next_turn_only_front_unblocked()
-            elif not self.is_right_visited() and self.is_front_visited():
-                super().next_turn_only_right_unblocked()
-            else:
-                super().next_turn_front_and_right_unblocked()
+            self.next_turn_based_on_scores_between_front_and_right()
 
     def next_turn_front_and_left_unblocked(self):
+        # print('DEBUG - CuriousMazeSolver: next_turn_front_and_left_unblocked')
         if not self.is_left_dead_end() and self.is_front_dead_end():
             self.next_turn_only_left_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end():
             self.next_turn_only_front_unblocked()
         else:
             self._last_square_was_dead_end = False
-            if self.is_left_visited() and not self.is_front_visited():
-                super().next_turn_only_front_unblocked()
-            elif not self.is_left_visited() and self.is_front_visited():
-                super().next_turn_only_left_unblocked()
-            else:
-                super().next_turn_front_and_left_unblocked()
+            self.next_turn_based_on_scores_between_front_and_left()
 
     def next_turn_all_unblocked(self):
         # print('DEBUG - CuriousMazeSolver: ALL directions are unblocked')
@@ -368,44 +499,16 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         elif self.is_left_dead_end() and not self.is_front_dead_end() and not self.is_right_dead_end():
             # print('DEBUG - CuriousMazeSolver: left is dead end')
             self._last_square_was_dead_end = False
-            if self.is_right_visited() and not self.is_front_visited():
-                super().next_turn_only_front_unblocked()
-            elif not self.is_right_visited() and self.is_front_visited():
-                super().next_turn_only_right_unblocked()
-            else:
-                super().next_turn_front_and_right_unblocked()
+            self.next_turn_based_on_scores_between_front_and_right()
         elif not self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
             # print('DEBUG - CuriousMazeSolver: front is dead end')
             self._last_square_was_dead_end = False
-            if self.is_right_visited() and not self.is_left_visited():
-                super().next_turn_only_left_unblocked()
-            elif not self.is_right_visited() and self.is_left_visited():
-                super().next_turn_only_right_unblocked()
-            else:
-                super().next_turn_left_and_right_unblocked()
+            self.next_turn_based_on_scores_between_left_and_right()
         elif not self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
             # print('DEBUG - CuriousMazeSolver: right is dead end')
             self._last_square_was_dead_end = False
-            if self.is_front_visited() and not self.is_left_visited():
-                super().next_turn_only_left_unblocked()
-            elif not self.is_front_visited() and self.is_left_visited():
-                super().next_turn_only_front_unblocked()
-            else:
-                super().next_turn_front_and_left_unblocked()
+            self.next_turn_based_on_scores_between_front_and_left()
         else:
             self._last_square_was_dead_end = False
             # print('DEBUG - CuriousMazeSolver: none are dead ends')
-            if self.is_front_visited() and self.is_left_visited() and not self.is_right_visited():
-                super().next_turn_only_right_unblocked()
-            elif self.is_front_visited() and not self.is_left_visited() and self.is_right_visited():
-                super().next_turn_only_left_unblocked()
-            elif not self.is_front_visited() and self.is_left_visited() and self.is_right_visited():
-                super().next_turn_only_front_unblocked()
-            elif self.is_front_visited() and not self.is_left_visited() and not self.is_right_visited():
-                super().next_turn_left_and_right_unblocked()
-            elif not self.is_front_visited() and self.is_left_visited() and not self.is_right_visited():
-                super().next_turn_front_and_right_unblocked()
-            elif not self.is_front_visited() and not self.is_left_visited() and self.is_right_visited():
-                super().next_turn_front_and_left_unblocked()
-            else:
-                super().next_turn_all_unblocked()
+            self.next_turn_based_on_scores_between_all_directions()
