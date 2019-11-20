@@ -127,6 +127,8 @@ class PreferredDirectionsTestNoneBlocked(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
 
     def test_should_turn_left_when_other_directions_are_dead_ends(self):
@@ -188,6 +190,8 @@ class PreferredDirectionsTestFrontBlocked(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(right_blocked = False, left_blocked = False)
 
     def test_should_turn_left_when_right_dead_end(self):
@@ -239,6 +243,8 @@ class PreferredDirectionsTestRightBlocked(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, left_blocked = False)
 
     def test_should_turn_left_when_front_dead_end(self):
@@ -290,6 +296,8 @@ class PreferredDirectionsTestLeftBlocked(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False)
 
     def test_should_turn_right_when_front_dead_end(self):
@@ -341,6 +349,8 @@ class PreferredDirectionsTestNoneBlockedLeftDeadEnd(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
         self.set_left_of_x1_y1_as_dead_end()
 
@@ -385,6 +395,8 @@ class PreferredDirectionsTestNoneBlockedRightDeadEnd(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
         self.set_right_of_x1_y1_as_dead_end()
 
@@ -429,6 +441,8 @@ class PreferredDirectionsTestNoneBlockedFrontDeadEnd(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
         self.set_front_of_x1_y1_as_dead_end()
 
