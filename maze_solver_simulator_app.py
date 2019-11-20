@@ -3,13 +3,15 @@ from maze_solver.maze_solving_session import SimulatorMazeSolvingSession
 from maze_solver.maze_factory import create_robotex_cyprus_2017_maze, create_a_real_16_to_16_beast
 
 
-_EXPERIMENT_COUNT = 1000
+_SAMPLE_SIZE = 1000
+_TIME_LIMIT_SEC = 300
 
-maze = create_a_real_16_to_16_beast()
-# maze = create_robotex_cyprus_2017_maze()
+# maze = create_a_real_16_to_16_beast()
+maze = create_robotex_cyprus_2017_maze()
 _total_move_counts = []
 _total_motion_times = []
-for _ in range(_EXPERIMENT_COUNT):
+_below_max_time_count = 0
+for _ in range(_SAMPLE_SIZE):
     simulator_session = SimulatorMazeSolvingSession(
         maze, 
         prefer_non_dead_ends_weight = 10,
@@ -21,6 +23,8 @@ for _ in range(_EXPERIMENT_COUNT):
     _results = simulator_session.start()
     _total_move_counts.append(_results['move_count'])
     _total_motion_times.append(_results['motion_time'])
+    if _results['motion_time'] < _TIME_LIMIT_SEC:
+        _below_max_time_count += 1
 print('=================================================================')
 print('=== maze={}'.format(maze.name))
 print('=== move count mean={}'.format(statistics.mean(_total_move_counts)))
@@ -33,4 +37,5 @@ print('=== motion time median={}'.format(statistics.median(_total_motion_times))
 print('=== motion time stdev={}'.format(statistics.stdev(_total_motion_times)))
 print('=== motion time min={}'.format(min(_total_motion_times)))
 print('=== motion time max={}'.format(max(_total_motion_times)))
+print('=== probability of solving within time limit={}'.format(_below_max_time_count * 100 / _SAMPLE_SIZE))
 print('=================================================================')
