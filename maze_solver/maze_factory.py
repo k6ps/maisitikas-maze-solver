@@ -108,7 +108,7 @@ def create_kasemetsaresortspa_test_maze() -> Maze:
         MazeSquare(x = 6, y = 5, y_plus = True, x_minus = True),
         MazeSquare(x = 6, y = 6, x_minus = True, y_minus = True)
     ]
-    return Maze(_squares, name='6-to-6')
+    return Maze(_squares, name='Kasemetsa Resort Spa Test Maze')
 
 def create_a_real_16_to_16_beast() -> Maze:
     _squares = [
