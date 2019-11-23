@@ -201,9 +201,17 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def current_square(self) -> Square:
         return self._current_square
 
+    @current_square.setter
+    def current_square(self, value: Square):
+        self._current_square = value
+
     @property
     def current_direction(self) -> Direction:
         return self._current_direction
+
+    @current_direction.setter
+    def current_direction(self, value: Direction):
+        self._current_direction = value
 
     @property
     def prefer_non_dead_ends_weight(self) -> int:
@@ -237,6 +245,14 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def prefer_no_turns_weight(self, value: int):
         self._prefer_no_turns_weight = value
 
+    @property
+    def center_coordinates(self) -> list:
+        return self._center_coordinates
+
+    @center_coordinates.setter
+    def center_coordinates(self, value: list):
+        self._center_coordinates = value
+
     def get_key_for_square(self, x: int, y: int) -> str:
         return '{}-{}'.format(x, y)
 
@@ -267,7 +283,8 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         prefer_unvisited_paths_weight: int = 2,
         prefer_closer_to_center_weight: int = 3,
         prefer_no_turns_weight: int = 1,
-        max_moves: int = 9999
+        max_moves: int = 9999,
+        center_coordinates: list = [8, 9]
     ):
         super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
         self.reset_to_start_and_forget_everything()
@@ -275,6 +292,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         self._prefer_unvisited_paths_weight = prefer_unvisited_paths_weight
         self._prefer_closer_to_center_weight = prefer_closer_to_center_weight
         self._prefer_no_turns_weight = prefer_no_turns_weight
+        self._center_coordinates = center_coordinates
 
     def turn_left(self):
         super().turn_left()
@@ -341,10 +359,14 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         return self.is_visited_in_direction(self._current_direction)
 
     def get_distance_from_center(self, x: int, y: int) -> int:
-        # assume center is composed of squares x=8,y=8; x=9,y=8; x=8,y=9; x=9,y=9
-        # TODO: this obviously breaks when maze size is not 16 x 16!
-        _min_x = min(abs(x - 9), abs(x - 8))
-        _min_y = min(abs(y - 9), abs(y - 8))
+        def _get_min_distance(x_or_y: int):
+            _distances = []
+            for coordinate in self._center_coordinates:
+                _distances.append(abs(x_or_y - coordinate))
+            return min(_distances)
+
+        _min_x = _get_min_distance(x)
+        _min_y = _get_min_distance(y)
         return max(_min_x, _min_y)
 
     def get_distance_from_center_in_direction(self, direction: Direction) -> int:
