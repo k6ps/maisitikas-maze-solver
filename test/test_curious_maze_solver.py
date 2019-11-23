@@ -59,7 +59,7 @@ class InitialStateTest(CuriousMazeSolverTest):
         self.assertEqual(Direction.NORTH, self._maze_solver.current_direction)
 
 
-class VisitedSquaresTest(CuriousMazeSolverTest):
+class MarkVisitedSquaresTest(CuriousMazeSolverTest):
 
     def test_should_mark_start_square_as_visited_when_making_first_move(self):
         self.assertFalse(self._maze_solver.is_visited(x = 1, y = 1))
@@ -96,7 +96,7 @@ class VisitedSquaresTest(CuriousMazeSolverTest):
         self.assertTrue(self._maze_solver.is_visited(x = 2, y = 3))
 
 
-class DeadEndSquaresTest(CuriousMazeSolverTest):
+class MarkDeadEndSquaresTest(CuriousMazeSolverTest):
 
     def test_should_mark_square_as_dead_end_when_all_sides_blocked(self):
         self._wall_detector.is_front_blocked.side_effect = [False, True]
@@ -123,13 +123,59 @@ class DeadEndSquaresTest(CuriousMazeSolverTest):
         self.assertTrue(self._maze_solver.is_dead_end(x = 1, y = 3))
 
 
-class PreferredDirectionsTestNoneBlocked(CuriousMazeSolverTest):
+class InSquareNoneBlockedTest(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
+        self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
+
+
+class InSquareLeftBlockedTest(CuriousMazeSolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False)
+
+
+class InSquareRightBlockedTest(CuriousMazeSolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.prepare_mock_wall_detector(front_blocked = False, left_blocked = False)
+
+
+class InSquareFrontBlockedTest(CuriousMazeSolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.prepare_mock_wall_detector(right_blocked = False, left_blocked = False)
+
+
+class AvoidDeadEndsTest(CuriousMazeSolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.set_other_weights_to_zero_except_dead_end()
+
+    def set_other_weights_to_zero_except_dead_end(self):
         self._maze_solver.prefer_closer_to_center_weight = 0
         self._maze_solver.prefer_no_turns_weight = 0
-        self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
+        self._maze_solver.prefer_unvisited_paths_weight = 0
+
+
+class PreferUnvisitedTest(CuriousMazeSolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.set_other_weights_to_zero_except_unvisited()
+
+    def set_other_weights_to_zero_except_unvisited(self):
+        self._maze_solver.prefer_closer_to_center_weight = 0
+        self._maze_solver.prefer_no_turns_weight = 0
+        self._maze_solver.prefer_non_dead_ends_weight = 0
+
+
+class AvoidDeadEndsWithNoneBlockedTest(InSquareNoneBlockedTest, AvoidDeadEndsTest):
 
     def test_should_turn_left_when_other_directions_are_dead_ends(self):
         self.set_front_of_x1_y1_as_dead_end()
@@ -186,13 +232,64 @@ class PreferredDirectionsTestNoneBlocked(CuriousMazeSolverTest):
         self.assertTrue(_motors_call_counter.left_turns == 0, 'Unexpected left turn made!')
 
 
-class PreferredDirectionsTestFrontBlocked(CuriousMazeSolverTest):
+class PreferUnvisitedWithNoneBlockedTest(InSquareNoneBlockedTest,PreferUnvisitedTest):
 
-    def setUp(self):
-        super().setUp()
-        self._maze_solver.prefer_closer_to_center_weight = 0
-        self._maze_solver.prefer_no_turns_weight = 0
-        self.prepare_mock_wall_detector(right_blocked = False, left_blocked = False)
+    def test_should_turn_left_when_other_directions_are_visited(self):
+        self.set_front_of_x1_y1_as_visited()
+        self.set_right_of_x1_y1_as_visited()
+        self._maze_solver.next_move()
+        self.assert_only_turn_left_called()
+
+    def test_should_turn_right_when_other_directions_are_visited(self):
+        self.set_left_of_x1_y1_as_visited()
+        self.set_front_of_x1_y1_as_visited()
+        self._maze_solver.next_move()
+        self.assert_only_turn_right_called()
+
+    def test_should_make_no_turn_when_front_is_free_and_other_directions_are_visited(self):
+        self.set_left_of_x1_y1_as_visited()
+        self.set_right_of_x1_y1_as_visited()
+        self._maze_solver.next_move()
+        self.assert_only_no_turn_called()
+
+    def test_should_randomly_either_turn_left_or_right_when_front_is_visited(self):
+        _motors_call_counter = MotorsCallCounter()
+        for _ in range(20):
+            self._maze_solver.reset_to_start_and_forget_everything()
+            self.set_front_of_x1_y1_as_visited()
+            self._call_recorder.reset_mock()
+            self._maze_solver.next_move()
+            _motors_call_counter.count_call(self._call_recorder.mock_calls[4])
+        self.assertTrue(_motors_call_counter.left_turns > 3, 'Too few left turns made!')
+        self.assertTrue(_motors_call_counter.right_turns > 3, 'Too few right turns made!')
+        self.assertTrue(_motors_call_counter.no_turns == 0, 'Unexpected no turn made!')
+
+    def test_should_randomly_either_turn_left_or_make_no_turn_when_right_is_visited(self):
+        _motors_call_counter = MotorsCallCounter()
+        for _ in range(20):
+            self._maze_solver.reset_to_start_and_forget_everything()
+            self.set_right_of_x1_y1_as_visited()
+            self._call_recorder.reset_mock()
+            self._maze_solver.next_move()
+            _motors_call_counter.count_call(self._call_recorder.mock_calls[4])
+        self.assertTrue(_motors_call_counter.left_turns > 3, 'Too few left turns made!')
+        self.assertTrue(_motors_call_counter.no_turns > 3, 'Too few no turns made!')
+        self.assertTrue(_motors_call_counter.right_turns == 0, 'Unexpected right turn made!')
+
+    def test_should_randomly_either_turn_right_or_make_no_turn_when_left_is_visited(self):
+        _motors_call_counter = MotorsCallCounter()
+        for _ in range(20):
+            self._maze_solver.reset_to_start_and_forget_everything()
+            self.set_left_of_x1_y1_as_visited()
+            self._call_recorder.reset_mock()
+            self._maze_solver.next_move()
+            _motors_call_counter.count_call(self._call_recorder.mock_calls[4])
+        self.assertTrue(_motors_call_counter.right_turns > 3, 'Too few right turns made!')
+        self.assertTrue(_motors_call_counter.no_turns > 3, 'Too few no turns made!')
+        self.assertTrue(_motors_call_counter.left_turns == 0, 'Unexpected left turn made!')
+
+
+class AvoidDeadEndsWithFrontBlockedTest(InSquareFrontBlockedTest, AvoidDeadEndsTest):
 
     def test_should_turn_left_when_right_dead_end(self):
         self.set_right_of_x1_y1_as_dead_end()
@@ -203,6 +300,22 @@ class PreferredDirectionsTestFrontBlocked(CuriousMazeSolverTest):
         self.set_left_of_x1_y1_as_dead_end()
         self._maze_solver.next_move()
         self.assert_only_turn_right_called()
+
+    def test_should_randomly_either_turn_left_or_right_when_both_are_dead_ends(self):
+        _motors_call_counter = MotorsCallCounter()
+        for _ in range(20):
+            self._maze_solver.reset_to_start_and_forget_everything()
+            self.set_left_of_x1_y1_as_dead_end()
+            self.set_right_of_x1_y1_as_dead_end()
+            self._call_recorder.reset_mock()
+            self._maze_solver.next_move()
+            _motors_call_counter.count_call(self._call_recorder.mock_calls[4])
+        self.assertTrue(_motors_call_counter.left_turns > 3, 'Too few left turns made!')
+        self.assertTrue(_motors_call_counter.right_turns > 3, 'Too few right turns made!')
+        self.assertTrue(_motors_call_counter.no_turns == 0, 'Unexpected no turn made!')
+
+
+class PreferUnvisitedWithFrontBlockedTest(InSquareFrontBlockedTest, PreferUnvisitedTest):
 
     def test_should_turn_left_when_right_is_visited_and_left_is_unvisited(self):
         self.set_right_of_x1_y1_as_visited()
@@ -239,13 +352,7 @@ class PreferredDirectionsTestFrontBlocked(CuriousMazeSolverTest):
         self.assertTrue(_motors_call_counter.no_turns == 0, 'Unexpected no turn made!')
 
 
-class PreferredDirectionsTestRightBlocked(CuriousMazeSolverTest):
-
-    def setUp(self):
-        super().setUp()
-        self._maze_solver.prefer_closer_to_center_weight = 0
-        self._maze_solver.prefer_no_turns_weight = 0
-        self.prepare_mock_wall_detector(front_blocked = False, left_blocked = False)
+class AvoidDeadEndsTestRightBlocked(InSquareRightBlockedTest, AvoidDeadEndsTest):
 
     def test_should_turn_left_when_front_dead_end(self):
         self.set_front_of_x1_y1_as_dead_end()
@@ -256,7 +363,10 @@ class PreferredDirectionsTestRightBlocked(CuriousMazeSolverTest):
         self.set_left_of_x1_y1_as_dead_end()
         self._maze_solver.next_move()
         self.assert_only_no_turn_called()
+
     
+class PreferUnvisitedTestRightBlocked(InSquareRightBlockedTest, PreferUnvisitedTest):
+
     def test_should_turn_left_when_front_is_visited_and_left_is_unvisited(self):
         self.set_front_of_x1_y1_as_visited()
         self._maze_solver.next_move()
@@ -292,13 +402,7 @@ class PreferredDirectionsTestRightBlocked(CuriousMazeSolverTest):
         self.assertTrue(_motors_call_counter.right_turns == 0, 'Unexpected right turn made!')
 
 
-class PreferredDirectionsTestLeftBlocked(CuriousMazeSolverTest):
-
-    def setUp(self):
-        super().setUp()
-        self._maze_solver.prefer_closer_to_center_weight = 0
-        self._maze_solver.prefer_no_turns_weight = 0
-        self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False)
+class AvoidDeadEndsTestLeftBlocked(InSquareLeftBlockedTest, AvoidDeadEndsTest):
 
     def test_should_turn_right_when_front_dead_end(self):
         self.set_front_of_x1_y1_as_dead_end()
@@ -310,6 +414,9 @@ class PreferredDirectionsTestLeftBlocked(CuriousMazeSolverTest):
         self._maze_solver.next_move()
         self.assert_only_no_turn_called()
 
+
+class PreferUnvisitedTestLeftBlocked(InSquareLeftBlockedTest, PreferUnvisitedTest):
+
     def test_should_turn_right_when_front_is_visited_and_right_is_unvisited(self):
         self.set_front_of_x1_y1_as_visited()
         self._maze_solver.next_move()
@@ -345,13 +452,19 @@ class PreferredDirectionsTestLeftBlocked(CuriousMazeSolverTest):
         self.assertTrue(_motors_call_counter.left_turns == 0, 'Unexpected left turn made!')
 
 
-class PreferredDirectionsTestNoneBlockedLeftDeadEnd(CuriousMazeSolverTest):
+class PreferUnvisitedTestWithDeadEnds(CuriousMazeSolverTest):
 
     def setUp(self):
         super().setUp()
         self._maze_solver.prefer_closer_to_center_weight = 0
         self._maze_solver.prefer_no_turns_weight = 0
         self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
+
+
+class PreferUnvisitedTestNoneBlockedLeftDeadEnd(PreferUnvisitedTestWithDeadEnds):
+
+    def setUp(self):
+        super().setUp()
         self.set_left_of_x1_y1_as_dead_end()
 
     def test_should_turn_right_when_front_is_visited_and_right_is_unvisited(self):
@@ -391,13 +504,10 @@ class PreferredDirectionsTestNoneBlockedLeftDeadEnd(CuriousMazeSolverTest):
         self.assertTrue(_motors_call_counter.left_turns == 0, 'Unexpected left turn made!')
 
 
-class PreferredDirectionsTestNoneBlockedRightDeadEnd(CuriousMazeSolverTest):
+class PreferUnvisitedTestNoneBlockedRightDeadEnd(PreferUnvisitedTestWithDeadEnds):
 
     def setUp(self):
         super().setUp()
-        self._maze_solver.prefer_closer_to_center_weight = 0
-        self._maze_solver.prefer_no_turns_weight = 0
-        self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
         self.set_right_of_x1_y1_as_dead_end()
 
     def test_should_turn_left_when_front_is_visited_and_left_is_unvisited(self):
@@ -437,13 +547,10 @@ class PreferredDirectionsTestNoneBlockedRightDeadEnd(CuriousMazeSolverTest):
         self.assertTrue(_motors_call_counter.right_turns == 0, 'Unexpected right turn made!')
 
 
-class PreferredDirectionsTestNoneBlockedFrontDeadEnd(CuriousMazeSolverTest):
+class PreferUnvisitedTestNoneBlockedFrontDeadEnd(PreferUnvisitedTestWithDeadEnds):
 
     def setUp(self):
         super().setUp()
-        self._maze_solver.prefer_closer_to_center_weight = 0
-        self._maze_solver.prefer_no_turns_weight = 0
-        self.prepare_mock_wall_detector(front_blocked = False, right_blocked = False, left_blocked = False)
         self.set_front_of_x1_y1_as_dead_end()
 
     def test_should_turn_left_when_right_is_visited_and_left_is_unvisited(self):
