@@ -24,12 +24,3 @@ Running the simulation application:
 cd /app
 python .\maze_solver_simulator_app.py
 ```
-
-# To Do
-
-1. Add unit tests for preference to directions that lead to central squares.
-2. Fix and add unit tests for preference to making no turn over turning left or right.
-3. Add proper logging
-4. Add memorzing the path taken.
-5. Figure out some less tedious and error-prone way to create new mazes. Maybe machine-readable ASCII art?
-6. Add detection and avoidance of cycles.
