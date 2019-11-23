@@ -590,5 +590,48 @@ class PreferUnvisitedTestNoneBlockedFrontDeadEnd(PreferUnvisitedTestWithDeadEnds
         self.assertTrue(_motors_call_counter.no_turns == 0, 'Unexpected no turn made!')
 
 
+class PreferCloserToAssumedFinishTest(CuriousMazeSolverTest):
+
+    def setUp(self):
+        super().setUp()
+        self.set_other_weights_to_zero_except_closer_to_assumed_finish()
+
+    def set_other_weights_to_zero_except_closer_to_assumed_finish(self):
+        self._maze_solver.prefer_no_turns_weight = 0
+        self._maze_solver.prefer_non_dead_ends_weight = 0
+        self._maze_solver.prefer_unvisited_paths_weight = 0
+
+
+class PreferCloserToFinishWithNoneBlockedTest(InSquareNoneBlockedTest, PreferCloserToAssumedFinishTest):
+
+    def test_should_turn_left_when_in_lower_left_part_and_other_directions_are_farther_from_finish(self):
+        self._maze_solver.center_coordinates = [5]
+        self._maze_solver.current_square = Square(x = 4, y = 2)
+        self._maze_solver.current_direction = Direction.EAST
+        self._maze_solver.next_move()
+        self.assert_only_turn_left_called()
+
+    def test_should_turn_right_when_in_upper_left_part_and_other_directions_are_farther_from_finish(self):
+        self._maze_solver.center_coordinates = [6]
+        self._maze_solver.current_square = Square(x = 5, y = 9)
+        self._maze_solver.current_direction = Direction.EAST
+        self._maze_solver.next_move()
+        self.assert_only_turn_right_called()
+
+    def test_should_make_no_turn_when_in_upper_right_part_and_other_directions_are_farther_from_finish(self):
+        self._maze_solver.center_coordinates = [7]
+        self._maze_solver.current_square = Square(x = 11, y = 7)
+        self._maze_solver.current_direction = Direction.WEST
+        self._maze_solver.next_move()
+        self.assert_only_no_turn_called()
+
+    def test_should_turn_right_when_multiple_finish_squares_and_other_directions_are_farther_from_finish(self):
+        self._maze_solver.center_coordinates = [6, 7]
+        self._maze_solver.current_square = Square(x = 10, y = 7)
+        self._maze_solver.current_direction = Direction.SOUTH
+        self._maze_solver.next_move()
+        self.assert_only_turn_right_called()
+
+
 if __name__ == '__main__':
     unittest.main()
