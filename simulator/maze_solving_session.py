@@ -1,5 +1,6 @@
 from maze_solver.direction import Direction
-from maze_solver.maze_solver import MazeSolver, RandomWalkerMazeSolver, CuriousMazeSolver, NotificationType
+from maze_solver.maze_solver import MazeSolver, NotificationType
+from maze_solver.curious_maze_solver import CuriousMazeSolver
 from simulator.maze import Maze, MazeSquare
 from simulator.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
 

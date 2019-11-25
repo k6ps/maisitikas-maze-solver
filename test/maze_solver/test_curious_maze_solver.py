@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import call, MagicMock, Mock
-from maze_solver.maze_solver import CuriousMazeSolver, Motors, NotificationType, Square
+from maze_solver.maze_solver import Motors, NotificationType
 from maze_solver.direction import Direction
+from maze_solver.curious_maze_solver import CuriousMazeSolver, Square
 from test.maze_solver.test_maze_solver import BaseMazeResolverTest, MotorsCallCounter
 
 
