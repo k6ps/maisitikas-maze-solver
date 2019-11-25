@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
-from maze_solver.maze_solving_session import MazeSolvingSession, SimulatorMazeSolvingSession, Direction
-from maze_solver.maze import MazeSquare
+from maze_solver.direction import Direction
+from simulator.maze_solving_session import MazeSolvingSession, SimulatorMazeSolvingSession
+from simulator.maze import MazeSquare
 
 
 class MazeSolvingSessionTests(unittest.TestCase):

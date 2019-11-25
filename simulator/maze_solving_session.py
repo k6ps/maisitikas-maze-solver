@@ -1,7 +1,7 @@
-from maze_solver.maze import Maze, MazeSquare
-from maze_solver.maze_solver import MazeSolver, RandomWalkerMazeSolver, CuriousMazeSolver, NotificationType
-from maze_solver.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
 from maze_solver.direction import Direction
+from maze_solver.maze_solver import MazeSolver, RandomWalkerMazeSolver, CuriousMazeSolver, NotificationType
+from simulator.maze import Maze, MazeSquare
+from simulator.simulator import SimulatorMotors, SimulatorFinishDetector, SimulatorWallDetector, SimulatorOutputs
 
 
 class MazeSolvingSession(object):

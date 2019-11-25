@@ -1,5 +1,5 @@
 import unittest
-from maze_solver.maze import Maze, MazeSquare
+from simulator.maze import Maze, MazeSquare
 
 class MazeTests(unittest.TestCase):
 

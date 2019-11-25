@@ -1,7 +1,7 @@
 import statistics
-from maze_solver.maze_solving_session import SimulatorMazeSolvingSession
-from maze_solver.maze import Maze
-from maze_solver.maze_factory import create_robotex_cyprus_2017_maze, create_a_real_16_to_16_beast, create_kasemetsaresortspa_test_maze, create_6_to_6_maze
+from simulator.maze_solving_session import SimulatorMazeSolvingSession
+from simulator.maze import Maze
+from simulator.maze_factory import create_robotex_cyprus_2017_maze, create_a_real_16_to_16_beast, create_kasemetsaresortspa_test_maze, create_6_to_6_maze
 
 
 _SAMPLE_SIZE = 1000
