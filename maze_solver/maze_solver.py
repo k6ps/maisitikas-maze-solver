@@ -8,19 +8,19 @@ class Motors(object):
     """
 
     def move_forward(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def turn_right(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def turn_left(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def turn_back(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def no_turn(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
 
 class FinishDetector(object):
@@ -29,7 +29,7 @@ class FinishDetector(object):
     """
 
     def is_finish(self) -> bool:
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
 
 class WallDetector(object):
@@ -38,13 +38,13 @@ class WallDetector(object):
     """
     
     def is_left_blocked(self) -> bool:
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
     
     def is_front_blocked(self) -> bool:
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
     
     def is_right_blocked(self) -> bool:
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
 
 class NotificationType(Enum):
@@ -58,7 +58,7 @@ class Outputs(object):
     """
 
     def notify(self, type: NotificationType, message: str):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
 
 class MazeSolver(object):
@@ -111,16 +111,16 @@ class MazeSolver(object):
         self.turn_left()
 
     def next_turn_left_and_right_unblocked(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def next_turn_front_and_right_unblocked(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def next_turn_front_and_left_unblocked(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def next_turn_all_unblocked(self):
-        raise NotImplementedError( "Please implemented this" )
+        raise NotImplementedError( "Please implement this" )
 
     def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
         if front_blocked and left_blocked and right_blocked:
