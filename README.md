@@ -21,12 +21,12 @@ If not running in Docker then just cd to project dir instead of the /app, of cou
 Running a single unit test class:
 ```
 cd /app
-python -m unittest test.test_curious_maze_solver.PreferredDirectionsTestNoneBlocked
+python -m unittest test.maze_solver.test_curious_maze_solver.PreferredDirectionsTestNoneBlocked
 ```
 Running a single unit test:
 ```
 cd /app
-python -m unittest test.test_curious_maze_solver.PreferredDirectionsTestNoneBlocked.test_should_randomly_either_turn_left_or_right_when_front_is_dead_end
+python -m unittest test.maze_solver.test_curious_maze_solver.PreferredDirectionsTestNoneBlocked.test_should_randomly_either_turn_left_or_right_when_front_is_dead_end
 ```
 
 # Simulator
