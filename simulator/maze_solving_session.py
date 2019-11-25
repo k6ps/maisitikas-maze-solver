@@ -126,6 +126,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         self._motion_time_in_seconds += self._BACK_TURN_MOTION_TIME_SECONDS
 
     def no_turn(self):
+        # Don't do anything
         pass
 
     def is_left_blocked(self) -> bool:
@@ -143,7 +144,8 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         return self._current_square.is_finish
 
     def notify(self, type: NotificationType, message: str):
-        print('Maze solver: {} - {}'.format(type, message))
+        # No need to notify anything in simulation, as one can follow logs in real time.
+        pass
 
     def start(self):
         _move_count = super().start()
