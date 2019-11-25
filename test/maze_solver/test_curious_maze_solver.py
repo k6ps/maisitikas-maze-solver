@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import call, MagicMock, Mock
 from maze_solver.maze_solver import CuriousMazeSolver, Motors, NotificationType, Square
 from maze_solver.direction import Direction
-from test.test_maze_solver import BaseMazeResolverTest, MotorsCallCounter
+from test.maze_solver.test_maze_solver import BaseMazeResolverTest, MotorsCallCounter
 
 
 class CuriousMazeSolverTest(BaseMazeResolverTest):
