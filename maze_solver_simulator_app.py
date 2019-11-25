@@ -1,13 +1,13 @@
 import statistics
 from maze_solver.maze_solving_session import SimulatorMazeSolvingSession
 from maze_solver.maze import Maze
-from maze_solver.maze_factory import create_robotex_cyprus_2017_maze, create_a_real_16_to_16_beast
+from maze_solver.maze_factory import create_robotex_cyprus_2017_maze, create_a_real_16_to_16_beast, create_kasemetsaresortspa_test_maze, create_6_to_6_maze
 
 
 _SAMPLE_SIZE = 1000
 _TIME_LIMIT_SEC = 300
 
-def perform_experiment(maze: Maze) -> dict:
+def perform_experiment(maze: Maze, center_coordinates: list) -> dict:
     _total_move_counts = []
     _total_motion_times = []
     _below_max_time_count = 0
@@ -18,7 +18,8 @@ def perform_experiment(maze: Maze) -> dict:
             prefer_unvisited_paths_weight = 3,
             prefer_closer_to_center_weight = 5, 
             prefer_no_turns_weight = 0,
-            max_moves=999
+            max_moves=999,
+            center_coordinates=center_coordinates
         )
         _results = simulator_session.start()
         _total_move_counts.append(_results['move_count'])
@@ -49,6 +50,8 @@ def print_experiment_series_results(results: dict):
         print('=================================================================')
 
 experiment_results = []
-experiment_results.append(perform_experiment(maze = create_a_real_16_to_16_beast()))
-experiment_results.append(perform_experiment(maze = create_robotex_cyprus_2017_maze()))
+experiment_results.append(perform_experiment(maze = create_a_real_16_to_16_beast(), center_coordinates = [8, 9]))
+experiment_results.append(perform_experiment(maze = create_robotex_cyprus_2017_maze(), center_coordinates = [8, 9]))
+experiment_results.append(perform_experiment(maze = create_6_to_6_maze(), center_coordinates = [4]))
+experiment_results.append(perform_experiment(maze = create_kasemetsaresortspa_test_maze(), center_coordinates = [4]))
 print_experiment_series_results(experiment_results)

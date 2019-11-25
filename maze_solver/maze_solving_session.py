@@ -36,7 +36,8 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         prefer_unvisited_paths_weight,
         prefer_closer_to_center_weight,
         prefer_no_turns_weight,
-        max_moves
+        max_moves,
+        center_coordinates,
     ):
         _motors = SimulatorMotors(
             move_forward_callback=self.move_forward, 
@@ -61,7 +62,8 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             prefer_unvisited_paths_weight=prefer_unvisited_paths_weight,
             prefer_closer_to_center_weight=prefer_closer_to_center_weight,
             prefer_no_turns_weight=prefer_no_turns_weight,
-            max_moves=max_moves
+            max_moves=max_moves,
+            center_coordinates=center_coordinates
         )
 
     def __init__(
@@ -71,7 +73,8 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         prefer_unvisited_paths_weight: int = 2,
         prefer_closer_to_center_weight: int = 3,
         prefer_no_turns_weight: int = 1,
-        max_moves: int = 999
+        max_moves: int = 999,
+        center_coordinates: list = [8, 9]
     ):
         # These are the supposed average times it would take to move, 
         # if it was a real physical thing.
@@ -84,7 +87,8 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             prefer_unvisited_paths_weight,
             prefer_closer_to_center_weight,
             prefer_no_turns_weight,
-            max_moves
+            max_moves,
+            center_coordinates
         )
         self._motion_time_in_seconds = 0
         super().__init__(maze, _simulator_maze_solver)
