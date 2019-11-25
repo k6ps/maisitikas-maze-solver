@@ -3,39 +3,48 @@ from enum import Enum
 from maze_solver.direction import Direction
 
 class Motors(object):
+    """
+    Abstract class, please implement all methods.
+    """
 
     def move_forward(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def turn_right(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def turn_left(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def turn_back(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def no_turn(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
 
 class FinishDetector(object):
-    
+    """
+    Abstract class, please implement all methods.
+    """
+
     def is_finish(self) -> bool:
-        return False
+        raise NotImplementedError( "Please implemented this" )
 
 
 class WallDetector(object):
+    """
+    Abstract class, please implement all methods.
+    """
     
     def is_left_blocked(self) -> bool:
-        return False
+        raise NotImplementedError( "Please implemented this" )
     
     def is_front_blocked(self) -> bool:
-        return False
+        raise NotImplementedError( "Please implemented this" )
     
     def is_right_blocked(self) -> bool:
-        return False
+        raise NotImplementedError( "Please implemented this" )
 
 
 class NotificationType(Enum):
@@ -44,12 +53,22 @@ class NotificationType(Enum):
 
 
 class Outputs(object):
+    """
+    Abstract class, please implement all methods.
+    """
 
     def notify(self, type: NotificationType, message: str):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
 
 class MazeSolver(object):
+    """
+    Abstract class, please implement at least the following methods:
+    * next_turn_left_and_right_unblocked
+    * next_turn_front_and_right_unblocked
+    * next_turn_front_and_left_unblocked
+    * next_turn_all_unblocked
+    """
 
     @property
     def max_moves(self) -> int:
@@ -92,16 +111,16 @@ class MazeSolver(object):
         self.turn_left()
 
     def next_turn_left_and_right_unblocked(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def next_turn_front_and_right_unblocked(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def next_turn_front_and_left_unblocked(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def next_turn_all_unblocked(self):
-        pass
+        raise NotImplementedError( "Please implemented this" )
 
     def next_turn(self, left_blocked: bool, front_blocked: bool, right_blocked: bool):
         if front_blocked and left_blocked and right_blocked:
@@ -155,6 +174,11 @@ class MazeSolver(object):
 
 
 class RandomWalkerMazeSolver(MazeSolver):
+    """
+    Reference implementation of MazeSolver: a maze solver that just takes random turns until
+    accidentally getting to finish square. It is of course very inefficient. It takes a few
+    days to solve a fairly complex 16 x 16 maze when each move or turn takes a second :)
+    """
 
     def next_turn_left_and_right_unblocked(self):
         self.call_one_in_random([self.turn_left, self.turn_right])
@@ -193,9 +217,11 @@ class Square(object):
         self._is_dead_end = is_dead_end
 
 
-# Prefers unexplored paths, remembers and avoids dead-ends - but can still 
-# randomly wander in already explored areas.
 class CuriousMazeSolver(RandomWalkerMazeSolver):
+    """
+    Prefers unexplored paths, remembers and avoids dead-ends, prefers turns that get closer to center.
+    Currently lacks cycle detection - therefore can take a long time to get out of more complex cycles.
+    """
 
     @property
     def current_square(self) -> Square:
