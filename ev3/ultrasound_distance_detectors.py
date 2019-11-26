@@ -15,6 +15,14 @@ class EV3UltrasoundDistanceDetectors(Thread):
         self._distance_left = 255.0
         self._distance_front = 255.0
         self._distance_right = 255.0
+        self._last_distances_queue_left = []
+        self._last_distances_queue_right = []
+        self._LAST_DISTANCES_QUEUE_MAX_LENGTH = 25
+
+    def _add_distance_to_queue(self, queue: list, distance: float):
+        queue.append(distance)
+        if len(queue) > self._LAST_DISTANCES_QUEUE_MAX_LENGTH:
+            queue.pop(0)
 
     def _get_current_time_milliseconds(self):
         return int(round(time.time() * 1000))
@@ -29,14 +37,16 @@ class EV3UltrasoundDistanceDetectors(Thread):
         print('DEBUG - EV3UltrasoundDistanceDetectors: starting')
         while (self._stop_command_received == False):
             _cycle_start_time = self._get_current_time_milliseconds()
-            self._distance_left = self._sensor_left.distance_centimeters
-            self._distance_front = self._sensor_front.distance_centimeters
-            self._distance_right = self._sensor_right.distance_centimeters
+            self._distance_left = round(self._sensor_left.distance_centimeters, 1)
+            self._distance_front = round(self._sensor_front.distance_centimeters, 1)
+            self._distance_right = round(self._sensor_right.distance_centimeters, 1)
             print('DEBUG - EV3UltrasoundDistanceDetectors: left={}, front={}, right={}'.format(
                 self._distance_left, 
                 self._distance_front, 
                 self._distance_right
             ))
+            self._add_distance_to_queue(self._last_distances_queue_left, self._distance_left)
+            self._add_distance_to_queue(self._last_distances_queue_right, self._distance_right)
             self._wait_until_end_of_cycle_time(_cycle_start_time)
         print('DEBUG - EV3UltrasoundDistanceDetectors: stopped')
 
@@ -51,3 +61,31 @@ class EV3UltrasoundDistanceDetectors(Thread):
             'front': self._distance_front,
             'right': self._distance_right
         }
+
+    def are_n_last_left_distances_between_x_and_y(self, n: int = 10, x: float = 3.4, y: float = 6.0):
+        _count = 0
+        for i in range(1, n + 1):
+            if self._last_distances_queue_left[-i] > x and self._last_distances_queue_left[-i] <= y:
+                _count += 1
+        return _count > 0.6 * n
+
+    def are_n_last_right_distances_between_x_and_y(self, n: int = 10, x: float = 3.4, y: float = 6.0):
+        _count = 0
+        for i in range(1, n + 1):
+            if self._last_distances_queue_right[-i] > x and self._last_distances_queue_right[-i] <= y:
+                _count += 1
+        return _count > 0.6 * n
+
+    def are_n_last_left_distances_below_x(self, n: int = 10, x: float = 3.0):
+        _count = 0
+        for i in range(1, n + 1):
+            if self._last_distances_queue_left[-i] < x:
+                _count += 1
+        return _count > 0.6 * n
+
+    def are_n_last_right_distances_below_x(self, n: int = 10, x: float = 3.0):
+        _count = 0
+        for i in range(1, n + 1):
+            if self._last_distances_queue_right[-i] < x:
+                _count += 1
+        return _count > 0.6 * n
