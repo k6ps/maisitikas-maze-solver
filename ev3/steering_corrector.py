@@ -1,4 +1,5 @@
 from enum import Enum
+from maze_solver.kwargs_util import KwArgsUtil
 from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
 
 
@@ -15,10 +16,10 @@ class SteeringCorrector(object):
         self._last_left_distances_queue = []
         self._last_right_distances_queue = []
         self._MAX_LAST_DISTANCES_QUEUE_LENGTH = 20
-        self._correct_counts = self._get_kwarg_or_default(2, 'correct_counts', **kwargs)
-        self._correct_back_later_counts = self._get_kwarg_or_default(10, 'correct_back_later_counts', **kwargs)
-        self._side_distance_difference_tolerance_cm = self._get_kwarg_or_default(0.8, 'side_distance_difference_tolerance_cm', **kwargs)
-        self._side_distance_difference_tolerance_count = self._get_kwarg_or_default(4, 'side_distance_difference_tolerance_count', **kwargs)
+        self._correct_counts = KwArgsUtil.kwarg_or_default(2, 'correct_counts', **kwargs)
+        self._correct_back_later_counts = KwArgsUtil.kwarg_or_default(10, 'correct_back_later_counts', **kwargs)
+        self._side_distance_difference_tolerance_cm = KwArgsUtil.kwarg_or_default(0.8, 'side_distance_difference_tolerance_cm', **kwargs)
+        self._side_distance_difference_tolerance_count = KwArgsUtil.kwarg_or_default(4, 'side_distance_difference_tolerance_count', **kwargs)
         self._counter = 0
         self._correct_back_left_counter = 0
         self._correct_back_right_counter = 0
@@ -26,12 +27,6 @@ class SteeringCorrector(object):
         self._correct_right_counter_start = 0
         self._correct_left_counter_end = 0
         self._correct_right_counter_end = 0
-
-    def _get_kwarg_or_default(self, default_value, param_key: str, **kwargs):
-        if kwargs is None or param_key not in kwargs: 
-            return default_value
-        else:
-            return kwargs[param_key]
 
     def _add_distance_to_queue(self, queue: list, distance: float):
         queue.append(distance)
