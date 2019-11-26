@@ -4,7 +4,11 @@ This is the code for my maze solver robot. It includes a simulator and a [LEGO M
 
 # Status
 
-This is currently work in progress. I may not publish some best parts of code before the competition - just in case :D. The algorithm lacks cycle detetion - but i'm working on it. Also, the EV3 part does not work yet. Simulator works fine.
+This is currently work in progress. The algorithm lacks cycle detection - but i'm working on it. 
+
+The EV3 part does not fully work yet. I'm not sure if i get it to working at all - seems like the EV3 ultrasound distance sensors are not accurate enough in distances less than 5 cm. Also it is not quite possible to create a robot that has width less than 10cm with LEGO parts. Thus, i have a hard time getting it to not hit any wall.
+
+Simulator works fine.
 
 # Running Unit Tests
 
