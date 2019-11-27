@@ -1,11 +1,13 @@
 import time
-from threading import Thread
+import logging
+import threading
 from ev3dev2.sensor.lego import GyroSensor
 
-class Gyro(Thread):
+class Gyro(threading.Thread):
 
-    def __init__(self):
-        Thread.__init__(self)
+    def __init__(self, logger=None):
+        self._logger = logger or logging.getLogger(__name__)
+        threading.Thread.__init__(self)
         self.setName('EV3Gyro')
         self._stop_command_received = False
         self._reading_cycle_length_ms = 100
@@ -24,18 +26,18 @@ class Gyro(Thread):
             time.sleep((self._reading_cycle_length_ms - _cycle_time) * 0.001)
 
     def run(self):
-        print('DEBUG - EV3Gyro: starting')
+        self._logger.debug('Starting')
         while (self._stop_command_received == False):
             _cycle_start_time = self._get_current_time_milliseconds()
             try:
                 self._angle = self._gyro.angle
             except:
-                print('WARN - EV3Gyro: unable to get angle from EV3 gyro sensor')
+                self._logger.warning('Unable to get angle from EV3 gyro sensor')
             self._wait_until_end_of_cycle_time(_cycle_start_time)
-        print('DEBUG - EV3Gyro: stopped')
+        self._logger.debug('Stopped')
 
     def stop(self):
-        print('DEBUG - EV3Gyro: stop requested')
+        self._logger.debug('Stop requested')
         self._stop_command_received = True
 
     def get_orientation(self):

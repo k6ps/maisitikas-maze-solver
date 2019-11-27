@@ -2,6 +2,7 @@ import math
 import time
 import random
 import enum
+import logging
 from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveSteering, SpeedRPM
 from ev3dev2.power import PowerSupply
 from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
@@ -17,7 +18,13 @@ class Steering(enum.Enum):
 
 class EV3Motors(Motors):
 
-    def __init__(self, distance_sensors: EV3UltrasoundDistanceDetectors, gyro: Gyro):
+    def __init__(
+        self, 
+        distance_sensors: EV3UltrasoundDistanceDetectors, 
+        gyro: Gyro,
+        logger = None
+    ):
+        self._logger = logger or logging.getLogger(__name__)
         self._distance_sensors = distance_sensors
         self._gyro = gyro
         self._motor_pair = MoveSteering(OUTPUT_A, OUTPUT_B)
@@ -53,7 +60,7 @@ class EV3Motors(Motors):
 
     def _correct_after_move_forward(self):
         if not self._last_time_left_corrected and self._should_correct_to_left():
-            print('DEBUG - EV3Motors: correcting to left')
+            self._logger.debug('Correcting to left')
             self._motor_pair.on_for_degrees(
                 steering=Steering.LEFT_ON_SPOT.value, 
                 speed=SpeedRPM(self._steering_correction_speed_rpm), 
@@ -61,7 +68,7 @@ class EV3Motors(Motors):
             )
             self._last_time_left_corrected = True
         elif not self._last_time_right_corrected and self._should_correct_to_right() :
-            print('DEBUG - EV3Motors: correcting to right')
+            self._logger.debug('Correcting to right')
             self._motor_pair.on_for_degrees(
                 steering=Steering.RIGHT_ON_SPOT.value, 
                 speed=SpeedRPM(self._steering_correction_speed_rpm), 
@@ -73,10 +80,10 @@ class EV3Motors(Motors):
             self._last_time_left_corrected = False
 
     def move_forward(self, no_of_squares: int = 1):
-        print('DEBUG - EV3Motors: move_forward')
+        self._logger.debug('Move_forward')
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
@@ -94,45 +101,43 @@ class EV3Motors(Motors):
             brake=True, block=True
         )
         _angle_after = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro angle change before correction={}'.format(_angle_after - _angle_before))
+        self._logger.debug('Gyro angle change before correction={}'.format(_angle_after - _angle_before))
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances after move before correction: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances after move before correction: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
         self._correct_after_move_forward()
         _front_distance = self._distance_sensors.get_distances()['front']
-        if _front_distance < 6.0:
-            print('DEBUG - EV3Motors: front is probably blocked, checking wether correct front distance')
-            if _front_distance > 3.0:
-                _distance_to_compensate_mm = (_front_distance - 3.0) * 10
-                if _distance_to_compensate_mm > 5.0:
-                    print('DEBUG - EV3Motors: need to correct front distance for {} mm'.format(_distance_to_compensate_mm))
-                    self._motor_pair.on_for_rotations(
-                        steering=Steering.STRAIGHT.value, 
-                        speed=SpeedRPM(self._steering_correction_speed_rpm), 
-                        rotations=(_distance_to_compensate_mm / self._wheel_circumference_mm),
-                        brake=True, block=True
-                    )
-        print('DEBUG - EV3Motors: move_forward done')
+        if _front_distance < 6.0 and _front_distance > 3.0:
+            _distance_to_compensate_mm = (_front_distance - 3.0) * 10
+            if _distance_to_compensate_mm > 5.0:
+                self._logger.debug('Need to correct front distance for {} mm'.format(_distance_to_compensate_mm))
+                self._motor_pair.on_for_rotations(
+                    steering=Steering.STRAIGHT.value, 
+                    speed=SpeedRPM(self._steering_correction_speed_rpm), 
+                    rotations=(_distance_to_compensate_mm / self._wheel_circumference_mm),
+                    brake=True, block=True
+                )
+        self._logger.debug('Move_forward done')
 
     def turn_left(self):
-        print('DEBUG - EV3Motors: turn_left')
+        self._logger.debug('turn_left')
         _power_current = self._power_supply.measured_amps
         _power_voltage = self._power_supply.measured_volts
-        print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
+        self._logger.debug('Power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
         _compensating_factor = 4.0
-        print('DEBUG - EV3Motors: compensating factor={}'.format(_compensating_factor))
+        self._logger.debug('Compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.LEFT_ON_SPOT.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
@@ -142,31 +147,31 @@ class EV3Motors(Motors):
         self._last_time_right_corrected = False
         self._last_time_left_corrected = False
         _angle_after = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances after: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances after: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
-        print('DEBUG - EV3Motors: turn_left done')
+        self._logger.debug('turn_left done')
 
     def turn_right(self):
-        print('DEBUG - EV3Motors: turn_right')
+        self._logger.debug('turn_right')
         _power_current = self._power_supply.measured_amps
         _power_voltage = self._power_supply.measured_volts
-        print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
+        self._logger.debug('Power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
         _compensating_factor = 1.0
-        print('DEBUG - EV3Motors: compensating factor={}'.format(_compensating_factor))
+        self._logger.debug('Compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.RIGHT_ON_SPOT.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
@@ -176,33 +181,33 @@ class EV3Motors(Motors):
         self._last_time_right_corrected = False
         self._last_time_left_corrected = False
         _angle_after = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances after: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances after: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
-        print('DEBUG - EV3Motors: turn_right done')
+        self._logger.debug('turn_right done')
 
     def turn_back(self):
-        print('DEBUG - EV3Motors: turn_back')
+        self._logger.debug('turn_back')
         _power_current = self._power_supply.measured_amps
         _power_voltage = self._power_supply.measured_volts
-        print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
+        self._logger.debug('Power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
         _compensating_factor_left = 4.0
         _compensating_factor_right = 1.0
-        print('DEBUG - EV3Motors: compensating factor left={}'.format(_compensating_factor_left))
-        print('DEBUG - EV3Motors: compensating factor right={}'.format(_compensating_factor_right))
+        self._logger.debug('Compensating factor left={}'.format(_compensating_factor_left))
+        self._logger.debug('Compensating factor right={}'.format(_compensating_factor_right))
         _steering = random.choice([Steering.LEFT_ON_SPOT, Steering.RIGHT_ON_SPOT])
         _compensating_factor = _compensating_factor_left if _steering == Steering.LEFT_ON_SPOT else _compensating_factor_right
         self._motor_pair.on_for_degrees(
@@ -214,15 +219,15 @@ class EV3Motors(Motors):
         self._last_time_right_corrected = False
         self._last_time_left_corrected = False
         _angle_after = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
         time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
-        print('DEBUG - EV3Motors: distances after: left={}, right={}, front={}'.format(
+        self._logger.debug('Distances after: left={}, right={}, front={}'.format(
             _distances['left'],
             _distances['right'],
             _distances['front']
         ))
-        print('DEBUG - EV3Motors: turn_back done')
+        self._logger.debug('turn_back done')
 
     def no_turn(self):
         pass
