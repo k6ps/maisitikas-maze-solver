@@ -1,3 +1,4 @@
+import logging
 from maze_solver.direction import Direction
 from maze_solver.maze_solver import RandomWalkerMazeSolver, Motors, WallDetector, FinishDetector, Outputs
 
@@ -118,9 +119,11 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         prefer_closer_to_center_weight: int = 3,
         prefer_no_turns_weight: int = 1,
         max_moves: int = 9999,
-        center_coordinates: list = [8, 9]
+        center_coordinates: list = [8, 9],
+        logger = None
     ):
         super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
+        self._logger = logger or logging.getLogger(__name__)
         self.reset_to_start_and_forget_everything()
         self._prefer_non_dead_ends_weight = prefer_non_dead_ends_weight
         self._prefer_unvisited_paths_weight = prefer_unvisited_paths_weight
@@ -131,17 +134,17 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def turn_left(self):
         super().turn_left()
         self._current_direction = self._current_direction.get_left_direction()
-        # print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
+        self._logger.debug('Direction is now {}'.format(self._current_direction))
 
     def turn_right(self):
         super().turn_right()
         self._current_direction = self._current_direction.get_right_direction()
-        # print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
+        self._logger.debug('Direction is now {}'.format(self._current_direction))
 
     def turn_back(self):
         super().turn_back()
         self._current_direction = self._current_direction.get_back_direction()
-        # print('DEBUG - CuriousMazeSolver: direction is now {}'.format(self._current_direction))
+        self._logger.debug('Direction is now {}'.format(self._current_direction))
 
     def add_square_as_visited(self, square):
         self._visited_squares[self.get_key_for_square(square.x, square.y)] = square
@@ -152,7 +155,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         _new_x = self._current_square.x + self._current_direction.value['x']
         _new_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = Square(x = _new_x, y = _new_y)
-        print('DEBUG - CuriousMazeSolver: current square is now x={}, y={}'.format(_new_x, _new_y))
+        self._logger.debug('Current square is now x={}, y={}'.format(_new_x, _new_y))
 
     def is_dead_end_in_direction(self, direction: Direction) -> bool:
         return self.is_dead_end(
@@ -169,7 +172,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def mark_current_square_as_dead_end(self):
         self._current_square.is_dead_end = True
         self._last_square_was_dead_end = True
-        print('DEBUG - CuriousMazeSolver: Square is dead end! x={}, y={} !!'.format(
+        self._logger.debug('Square is dead end! x={}, y={} !!'.format(
             self._current_square.x, 
             self._current_square.y
         ))
@@ -282,11 +285,8 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             super().next_turn_front_and_right_unblocked()
 
     def next_turn_based_on_scores_between_front_and_left(self):
-        # print('DEBUG - CuriousMazeSolver: next_turn_based_on_scores_between_front_and_left')
         _front_score = self.get_score_front()
-        # print('DEBUG - CuriousMazeSolver: front_score={}'.format(_front_score))
         _left_score = self.get_score_left()
-        # print('DEBUG - CuriousMazeSolver: left_score={}'.format(_left_score))
         if _front_score > _left_score:
             super().next_turn_only_front_unblocked()
         elif _front_score < _left_score:
@@ -332,7 +332,6 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_based_on_scores_between_front_and_right()
 
     def next_turn_front_and_left_unblocked(self):
-        # print('DEBUG - CuriousMazeSolver: next_turn_front_and_left_unblocked')
         if not self.is_left_dead_end() and self.is_front_dead_end():
             self.next_turn_only_left_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end():
@@ -342,29 +341,21 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
             self.next_turn_based_on_scores_between_front_and_left()
 
     def next_turn_all_unblocked(self):
-        # print('DEBUG - CuriousMazeSolver: ALL directions are unblocked')
         if not self.is_left_dead_end() and self.is_front_dead_end() and self.is_right_dead_end():
-            # print('DEBUG - CuriousMazeSolver: front and right are dead ends')
             self.next_turn_only_left_unblocked()
         elif self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
-            # print('DEBUG - CuriousMazeSolver: front and left are dead ends')
             self.next_turn_only_right_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
-            # print('DEBUG - CuriousMazeSolver: right and left are dead ends')
             self.next_turn_only_front_unblocked()
         elif self.is_left_dead_end() and not self.is_front_dead_end() and not self.is_right_dead_end():
-            # print('DEBUG - CuriousMazeSolver: left is dead end')
             self._last_square_was_dead_end = False
             self.next_turn_based_on_scores_between_front_and_right()
         elif not self.is_left_dead_end() and self.is_front_dead_end() and not self.is_right_dead_end():
-            # print('DEBUG - CuriousMazeSolver: front is dead end')
             self._last_square_was_dead_end = False
             self.next_turn_based_on_scores_between_left_and_right()
         elif not self.is_left_dead_end() and not self.is_front_dead_end() and self.is_right_dead_end():
-            # print('DEBUG - CuriousMazeSolver: right is dead end')
             self._last_square_was_dead_end = False
             self.next_turn_based_on_scores_between_front_and_left()
         else:
             self._last_square_was_dead_end = False
-            # print('DEBUG - CuriousMazeSolver: none are dead ends')
             self.next_turn_based_on_scores_between_all_directions()

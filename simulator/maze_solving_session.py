@@ -1,3 +1,4 @@
+import logging
 from maze_solver.direction import Direction
 from maze_solver.maze_solver import MazeSolver, NotificationType
 from maze_solver.curious_maze_solver import CuriousMazeSolver
@@ -21,12 +22,8 @@ class MazeSolvingSession(object):
         self._current_square = self._maze.get_start_square()
         self._current_direction = Direction.NORTH
 
-    def start(self):
-        # print('DEBUG - MazeSolvingSession: start square is x={}, y={}'.format(self._current_square.x, self._current_square.y))
-        # print('DEBUG - MazeSolvingSession: start direction is {}'.format( self._current_direction))
-        _move_count = self._maze_solver.start()
-        # print('INFO - MazeSolvingSession: total move count={}'.format(_move_count))
-        return _move_count
+    def start(self) -> int:
+        return self._maze_solver.start()
 
 
 class SimulatorMazeSolvingSession(MazeSolvingSession):
@@ -67,6 +64,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             center_coordinates=center_coordinates
         )
 
+    # TODO: make the parameters kwargs
     def __init__(
         self, 
         maze,
@@ -75,10 +73,13 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         prefer_closer_to_center_weight: int = 3,
         prefer_no_turns_weight: int = 1,
         max_moves: int = 999,
-        center_coordinates: list = [8, 9]
+        center_coordinates: list = [8, 9],
+        logger=None
     ):
+        self._logger = logger or logging.getLogger(__name__)
         # These are the supposed average times it would take to move, 
         # if it was a real physical thing.
+        # TODO: make these parameters
         self._FORWARD_MOTION_TIME_SECONDS = 1.1
         self._TURN_MOTION_TIME_SECONDS = 0.9
         self._BACK_TURN_MOTION_TIME_SECONDS = 1.7
@@ -95,7 +96,6 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         super().__init__(maze, _simulator_maze_solver)
 
     def is_direction_from_current_square_blocked(self, direction: Direction) -> bool:
-        # print('DEBUG - SimulatorMazeSolvingSession: type of direction is {}'.format(type(direction)))
         if direction.value['x'] == 1:
             return not self._current_square.x_plus
         elif direction.value['x'] == -1:
@@ -111,7 +111,7 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         _next_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = self._maze.get_square(x = _next_x, y = _next_y)
         self._motion_time_in_seconds += self._FORWARD_MOTION_TIME_SECONDS
-        # print('DEBUG - SimulatorMazeSolvingSession: moving to square x={}, y={}'.format(_next_x, _next_y))
+        self._logger.debug('Maze solver moving to square x={}, y={}'.format(_next_x, _next_y))
 
     def turn_right(self):
         self._current_direction = self._current_direction.get_right_direction()
@@ -147,9 +147,9 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         # No need to notify anything in simulation, as one can follow logs in real time.
         pass
 
-    def start(self):
+    def start(self) -> dict:
         _move_count = super().start()
-        print('DEBUG - SimulatorMazeSolvingSession: move count={}, motion time={}, '.format(
+        self._logger.info('Move count={}, motion time={}, '.format(
             _move_count, 
             self._motion_time_in_seconds
         ))

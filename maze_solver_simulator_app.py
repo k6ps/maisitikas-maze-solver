@@ -1,11 +1,18 @@
 import statistics
+import sys
+import logging
 from simulator.maze_solving_session import SimulatorMazeSolvingSession
 from simulator.maze import Maze
 from simulator.maze_factory import create_robotex_cyprus_2017_maze, create_a_real_16_to_16_beast, create_kasemetsaresortspa_test_maze, create_6_to_6_maze
 
-
+# TODO: make these parameters
 _SAMPLE_SIZE = 1000
 _TIME_LIMIT_SEC = 300
+
+def set_up_console_logging():
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logging.basicConfig(level=logging.INFO, handlers=[console_handler])
 
 def perform_experiment(maze: Maze, center_coordinates: list) -> dict:
     _total_move_counts = []
@@ -49,6 +56,7 @@ def print_experiment_series_results(results: dict):
             print('{}={}'.format(_key, _result[_key]))
         print('=================================================================')
 
+set_up_console_logging()
 experiment_results = []
 experiment_results.append(perform_experiment(maze = create_a_real_16_to_16_beast(), center_coordinates = [8, 9]))
 experiment_results.append(perform_experiment(maze = create_robotex_cyprus_2017_maze(), center_coordinates = [8, 9]))

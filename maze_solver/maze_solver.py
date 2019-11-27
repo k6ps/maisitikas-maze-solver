@@ -1,3 +1,4 @@
+import logging
 import random
 from enum import Enum
 
@@ -78,7 +79,16 @@ class MazeSolver(object):
     def max_moves(self, value: int):
         self._max_moves = value
 
-    def __init__(self, motors: Motors, wall_detector: WallDetector, finish_detector: FinishDetector, outputs: Outputs, max_moves: int = 9999):
+    def __init__(
+        self, 
+        motors: Motors, 
+        wall_detector: WallDetector, 
+        finish_detector: FinishDetector, 
+        outputs: Outputs, 
+        max_moves: int = 9999,
+        logger = None
+    ):
+        self._logger = logger or logging.getLogger(__name__)
         self._motors = motors
         self._wall_detector = wall_detector
         self._finish_detector = finish_detector
@@ -144,31 +154,32 @@ class MazeSolver(object):
         self._motors.move_forward()
 
     def next_move(self):
-        # print('DEBUG - RandomWalkerMazeSolver: starting move')
+        self._logger.debug('Starting move')
 
         if self._finish_detector.is_finish():
+            self._logger.info('Finised successfully in finish square!')
             self._outputs.notify(NotificationType.INFO, 'Finised successfully in finish square!')
             return True
 
         _front_blocked = self._wall_detector.is_front_blocked()
         _left_blocked = self._wall_detector.is_left_blocked()
         _right_blocked = self._wall_detector.is_right_blocked()
-        # print('DEBUG - RandomWalkerMazeSolver: left blocked={}, front blocked={}, right blocked={}'.format(_left_blocked, _front_blocked, _right_blocked))
+        self._logger.debug('Left blocked={}, front blocked={}, right blocked={}'.format(_left_blocked, _front_blocked, _right_blocked))
 
         self.next_turn(_left_blocked, _front_blocked, _right_blocked)
         self.move_forward_to_next_square()
-        # print('DEBUG - RandomWalkerMazeSolver: Move done, ready for next')
+        self._logger.debug('Move done, ready for next')
         return False
 
-    def start(self):
+    def start(self) -> int:
         _move_count = 0
         _finished_or_cannot_move = False
         while not _finished_or_cannot_move and _move_count < self._max_moves:
-            # print('DEBUG - RandomWalkerMazeSolver: move count={}'.format(_move_count))
+            self._logger.debug('Move count={}'.format(_move_count))
             _finished_or_cannot_move = self.next_move()
             _move_count += 1
         if not _finished_or_cannot_move and _move_count >= self._max_moves:
-            # print('DEBUG - RandomWalkerMazeSolver: Maximum allowed move count={} reached!'.format(self._max_moves))
+            self._logger.warning('Maximum allowed move count={} reached!'.format(self._max_moves))
             self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
         return _move_count
 
