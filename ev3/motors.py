@@ -117,10 +117,14 @@ class EV3Motors(Motors):
                 self._logger.debug('Need to correct front distance for {} mm'.format(_distance_to_compensate_mm))
                 self._motor_pair.on_for_rotations(
                     steering=Steering.STRAIGHT.value, 
-                    speed=SpeedRPM(self._steering_correction_speed_rpm), 
+                    speed=SpeedRPM(self._steering_correction_speed_rpm * self._move_forward_speed_factor), 
                     rotations=(_distance_to_compensate_mm / self._wheel_circumference_mm),
                     brake=True, block=True
                 )
+        _front_distance_remainder = _distances['front'] % 18
+        self._logger.debug('Front distance remainder={}'.format(_front_distance_remainder))
+        if _distances['front'] < 3 * 18 and _front_distance_remainder > 4.5 and _front_distance_remainder < 16.5:
+            self._logger.debug('Bad front distance remainder. I may be at bad angle')
         self._logger.debug('Move_forward done')
 
     def turn_left(self):
@@ -155,6 +159,10 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
+        _front_distance_remainder = _distances['front'] % 18
+        self._logger.debug('Front distance remainder={}'.format(_front_distance_remainder))
+        if _distances['front'] < 3 * 18 and _front_distance_remainder > 4.5 and _front_distance_remainder < 16.5:
+            self._logger.debug('Bad front distance remainder. I may be at bad angle')
         self._logger.debug('turn_left done')
 
     def turn_right(self):
@@ -189,6 +197,10 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
+        _front_distance_remainder = _distances['front'] % 18
+        self._logger.debug('Front distance remainder={}'.format(_front_distance_remainder))
+        if _distances['front'] < 3 * 18 and _front_distance_remainder > 4.5 and _front_distance_remainder < 16.5:
+            self._logger.debug('Bad front distance remainder. I may be at bad angle')
         self._logger.debug('turn_right done')
 
     def turn_back(self):
@@ -227,6 +239,10 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
+        _front_distance_remainder = _distances['front'] % 18
+        self._logger.debug('Front distance remainder={}'.format(_front_distance_remainder))
+        if _distances['front'] < 3 * 18 and _front_distance_remainder > 4.5 and _front_distance_remainder < 16.5:
+            self._logger.debug('Bad front distance remainder. I may be at bad angle')
         self._logger.debug('turn_back done')
 
     def no_turn(self):
