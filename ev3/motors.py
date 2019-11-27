@@ -129,7 +129,7 @@ class EV3Motors(Motors):
             _distances['front']
         ))
         _compensating_factor = 8.0
-        print('DEBUG - EV3Motors: gcompensating factor={}'.format(_compensating_factor))
+        print('DEBUG - EV3Motors: compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.LEFT_ON_SPOT.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
@@ -161,7 +161,7 @@ class EV3Motors(Motors):
             _distances['front']
         ))
         _compensating_factor = 3.5
-        print('DEBUG - EV3Motors: gcompensating factor={}'.format(_compensating_factor))
+        print('DEBUG - EV3Motors: compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.RIGHT_ON_SPOT.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
@@ -192,10 +192,16 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
+        _compensating_factor_left = 8.0
+        _compensating_factor_right = 3.5
+        print('DEBUG - EV3Motors: compensating factor left={}'.format(_compensating_factor_left))
+        print('DEBUG - EV3Motors: compensating factor right={}'.format(_compensating_factor_right))
+        _steering = random.choice([Steering.LEFT_ON_SPOT, Steering.RIGHT_ON_SPOT])
+        _compensating_factor = _compensating_factor_left if _steering == Steering.LEFT_ON_SPOT else _compensating_factor_right
         self._motor_pair.on_for_degrees(
-            steering = random.choice([Steering.LEFT_ON_SPOT.value, Steering.RIGHT_ON_SPOT.value]), 
+            steering = _steering.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
-            degrees = 2 * self._motor_degrees_for_90_degree_turn, 
+            degrees = 2 * (self._motor_degrees_for_90_degree_turn + _compensating_factor), 
             brake=True, block=True
         )
         self._last_time_right_corrected = False
