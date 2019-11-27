@@ -62,6 +62,7 @@ class EV3UltrasoundDistanceDetectors(Thread):
             'right': self._distance_right
         }
 
+    # TODO: move these four mehtods to steering corrector
     def are_n_last_left_distances_between_x_and_y(self, n: int = 10, x: float = 3.4, y: float = 6.0):
         _count = 0
         for i in range(1, n + 1):
