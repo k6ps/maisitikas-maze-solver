@@ -155,7 +155,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         _new_x = self._current_square.x + self._current_direction.value['x']
         _new_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = Square(x = _new_x, y = _new_y)
-        self._logger.debug('Current square is now x={}, y={}'.format(_new_x, _new_y))
+        self._logger.info('Current square is now x={}, y={}'.format(_new_x, _new_y))
 
     def is_dead_end_in_direction(self, direction: Direction) -> bool:
         return self.is_dead_end(
@@ -172,7 +172,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def mark_current_square_as_dead_end(self):
         self._current_square.is_dead_end = True
         self._last_square_was_dead_end = True
-        self._logger.debug('Square is dead end! x={}, y={} !!'.format(
+        self._logger.info('Square is dead end! x={}, y={} !!'.format(
             self._current_square.x, 
             self._current_square.y
         ))
