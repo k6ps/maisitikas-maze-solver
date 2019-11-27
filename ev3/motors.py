@@ -128,7 +128,7 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
-        _compensating_factor = 8.0
+        _compensating_factor = 4.0
         print('DEBUG - EV3Motors: compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.LEFT_ON_SPOT.value, 
@@ -160,7 +160,7 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
-        _compensating_factor = 3.5
+        _compensating_factor = 1.0
         print('DEBUG - EV3Motors: compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.RIGHT_ON_SPOT.value, 
@@ -192,8 +192,8 @@ class EV3Motors(Motors):
             _distances['right'],
             _distances['front']
         ))
-        _compensating_factor_left = 8.0
-        _compensating_factor_right = 3.5
+        _compensating_factor_left = 4.0
+        _compensating_factor_right = 1.0
         print('DEBUG - EV3Motors: compensating factor left={}'.format(_compensating_factor_left))
         print('DEBUG - EV3Motors: compensating factor right={}'.format(_compensating_factor_right))
         _steering = random.choice([Steering.LEFT_ON_SPOT, Steering.RIGHT_ON_SPOT])
