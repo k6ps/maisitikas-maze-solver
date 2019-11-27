@@ -10,7 +10,7 @@ class EV3WallDetector(WallDetector):
         self._distance_treshold_to_decide_wall_is_blocked = KwArgsUtil.kwarg_or_default(9.0, 'distance_treshold_to_decide_wall_is_blocked', **kwargs)
 
     def _is_direction_blocked(self, direction: str):
-        time.sleep(0.2)
+        time.sleep(0.1)
         _distance = self._distance_sensors.get_distances()[direction]
         print('DEBUG - EV3WallDetector: {} distance = {}'.format(direction, _distance))
         return _distance < self._distance_treshold_to_decide_wall_is_blocked
