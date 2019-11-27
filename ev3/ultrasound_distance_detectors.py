@@ -40,11 +40,11 @@ class EV3UltrasoundDistanceDetectors(Thread):
             self._distance_left = round(self._sensor_left.distance_centimeters, 1)
             self._distance_front = round(self._sensor_front.distance_centimeters, 1)
             self._distance_right = round(self._sensor_right.distance_centimeters, 1)
-            print('DEBUG - EV3UltrasoundDistanceDetectors: left={}, front={}, right={}'.format(
-                self._distance_left, 
-                self._distance_front, 
-                self._distance_right
-            ))
+            # print('DEBUG - EV3UltrasoundDistanceDetectors: left={}, front={}, right={}'.format(
+            #     self._distance_left, 
+            #     self._distance_front, 
+            #     self._distance_right
+            # ))
             self._add_distance_to_queue(self._last_distances_queue_left, self._distance_left)
             self._add_distance_to_queue(self._last_distances_queue_right, self._distance_right)
             self._wait_until_end_of_cycle_time(_cycle_start_time)
