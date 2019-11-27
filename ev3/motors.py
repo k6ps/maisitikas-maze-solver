@@ -101,22 +101,6 @@ class EV3Motors(Motors):
         self._last_time_left_corrected = False
         _angle_after_turn = self._gyro.get_orientation()
         print('DEBUG - EV3Motors: gyro after turning left={}'.format(_angle_after_turn))
-        # if abs(_angle_after_turn - _angle_before_turn) < (90 - 20):
-        #     print('DEBUG - EV3Motors: need to correct left turn to more left')
-        #     self._motor_pair.on_for_degrees(
-        #         steering=Steering.LEFT_ON_SPOT.value, 
-        #         speed=SpeedRPM(self._steering_correction_speed_rpm), 
-        #         degrees=self._steering_correction_motor_degrees
-        #     )
-        # elif abs(_angle_after_turn - _angle_before_turn) > (90 + 20):
-        #     print('DEBUG - EV3Motors: need to correct left turn back to right')
-        #     self._motor_pair.on_for_degrees(
-        #         steering=Steering.RIGHT_ON_SPOT.value, 
-        #         speed=SpeedRPM(self._steering_correction_speed_rpm), 
-        #         degrees=self._steering_correction_motor_degrees
-        #     )
-        # else:
-        #     print('DEBUG - EV3Motors: no need to further correct left turn')
 
     def turn_right(self):
         _angle_before_turn = self._gyro.get_orientation()
@@ -131,22 +115,6 @@ class EV3Motors(Motors):
         self._last_time_left_corrected = False
         _angle_after_turn = self._gyro.get_orientation()
         print('DEBUG - EV3Motors: gyro after turning right={}'.format(_angle_after_turn))
-        # if abs(_angle_after_turn - _angle_before_turn) < (90 - 20):
-        #     print('DEBUG - EV3Motors: need to correct right turn to more right')
-        #     self._motor_pair.on_for_degrees(
-        #         steering=Steering.RIGHT_ON_SPOT.value, 
-        #         speed=SpeedRPM(self._steering_correction_speed_rpm), 
-        #         degrees=self._steering_correction_motor_degrees
-        #     )
-        # elif abs(_angle_after_turn - _angle_before_turn) > (90 + 20):
-        #     print('DEBUG - EV3Motors: need to correct right turn back to left')
-        #     self._motor_pair.on_for_degrees(
-        #         steering=Steering.LEFT_ON_SPOT.value, 
-        #         speed=SpeedRPM(self._steering_correction_speed_rpm), 
-        #         degrees=self._steering_correction_motor_degrees
-        #     )
-        # else:
-        #     print('DEBUG - EV3Motors: no need to further correct right turn')
 
     def turn_back(self):
         print('DEBUG - EV3Motors: gyro before turning back={}'.format(self._gyro.get_orientation()))
