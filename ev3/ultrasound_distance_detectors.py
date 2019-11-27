@@ -63,6 +63,7 @@ class EV3UltrasoundDistanceDetectors(Thread):
         }
 
     # TODO: move these four mehtods to steering corrector
+    # TODO: make every value a parameter
     def are_n_last_left_distances_between_x_and_y(self, n: int = 10, x: float = 3.4, y: float = 6.0):
         _count = 0
         for i in range(1, n + 1):
@@ -74,19 +75,5 @@ class EV3UltrasoundDistanceDetectors(Thread):
         _count = 0
         for i in range(1, n + 1):
             if self._last_distances_queue_right[-i] > x and self._last_distances_queue_right[-i] <= y:
-                _count += 1
-        return _count > 0.6 * n
-
-    def are_n_last_left_distances_below_x(self, n: int = 10, x: float = 3.0):
-        _count = 0
-        for i in range(1, n + 1):
-            if self._last_distances_queue_left[-i] < x:
-                _count += 1
-        return _count > 0.6 * n
-
-    def are_n_last_right_distances_below_x(self, n: int = 10, x: float = 3.0):
-        _count = 0
-        for i in range(1, n + 1):
-            if self._last_distances_queue_right[-i] < x:
                 _count += 1
         return _count > 0.6 * n
