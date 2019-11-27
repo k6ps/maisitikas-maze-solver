@@ -38,21 +38,18 @@ class EV3Motors(Motors):
     def _get_current_time_milliseconds(self):
         return int(round(time.time() * 1000))
 
-    def _get_move_square_forward_time_sec(self, no_of_squares: int = 1):
-        _rotations = (no_of_squares * self._maze_square_length_mm) / self._wheel_circumference_mm
+    def _get_move_square_forward_time_sec(self, front_distance_mm: float, no_of_squares: int = 1):
+        _length_mm = self._maze_square_length_mm
+        if no_of_squares == 1 and front_distance_mm < self._maze_square_length_mm:
+            _length_mm = self._maze_square_length_mm - front_distance_mm
+        _rotations = (no_of_squares * _length_mm) / self._wheel_circumference_mm
         return _rotations / (self._move_forward_speed_percent / 60)
 
     def _should_correct_to_left(self):
-        _left_too_far = self._distance_sensors.are_n_last_left_distances_between_x_and_y()
-        _right_too_close = self._distance_sensors.are_n_last_right_distances_below_x()
-        print('DEBUG - EV3Motors: left too far={}, right too close={}'.format(_left_too_far, _right_too_close))
-        return _left_too_far or _right_too_close
+        return self._distance_sensors.are_n_last_left_distances_between_x_and_y()
 
     def _should_correct_to_right(self):
-        _right_too_far = self._distance_sensors.are_n_last_right_distances_between_x_and_y()
-        _left_too_close = self._distance_sensors.are_n_last_left_distances_below_x()
-        print('DEBUG - EV3Motors: right too far={}, left too close={}'.format(_right_too_far, _left_too_close))
-        return _right_too_far or _left_too_close
+        return self._distance_sensors.are_n_last_right_distances_between_x_and_y()
 
     def _correct_after_move_forward(self):
         if not self._last_time_left_corrected and self._should_correct_to_left():
@@ -77,6 +74,7 @@ class EV3Motors(Motors):
 
     def move_forward(self, no_of_squares: int = 1):
         print('DEBUG - EV3Motors: move_forward')
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -85,7 +83,10 @@ class EV3Motors(Motors):
         ))
         _angle_before = self._gyro.get_orientation()
         _speed = SpeedRPM(self._move_forward_speed_percent * self._move_forward_speed_factor)
-        _move_time_sec = self._get_move_square_forward_time_sec(no_of_squares = no_of_squares)
+        _move_time_sec = self._get_move_square_forward_time_sec(
+            front_distance_mm = _distances['front'] * 10, 
+            no_of_squares = no_of_squares
+        )
         self._motor_pair.on_for_seconds(
             steering=Steering.STRAIGHT.value, 
             speed=_speed, 
@@ -94,6 +95,7 @@ class EV3Motors(Motors):
         )
         _angle_after = self._gyro.get_orientation()
         print('DEBUG - EV3Motors: gyro angle change before correction={}'.format(_angle_after - _angle_before))
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances after move before correction: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -122,6 +124,7 @@ class EV3Motors(Motors):
         _power_voltage = self._power_supply.measured_volts
         print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -140,6 +143,7 @@ class EV3Motors(Motors):
         self._last_time_left_corrected = False
         _angle_after = self._gyro.get_orientation()
         print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances after: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -154,6 +158,7 @@ class EV3Motors(Motors):
         _power_voltage = self._power_supply.measured_volts
         print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -172,6 +177,7 @@ class EV3Motors(Motors):
         self._last_time_left_corrected = False
         _angle_after = self._gyro.get_orientation()
         print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances after: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -186,6 +192,7 @@ class EV3Motors(Motors):
         _power_voltage = self._power_supply.measured_volts
         print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances before: left={}, right={}, front={}'.format(
             _distances['left'],
@@ -208,6 +215,7 @@ class EV3Motors(Motors):
         self._last_time_left_corrected = False
         _angle_after = self._gyro.get_orientation()
         print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        time.sleep(0.1)
         _distances = self._distance_sensors.get_distances()
         print('DEBUG - EV3Motors: distances after: left={}, right={}, front={}'.format(
             _distances['left'],
