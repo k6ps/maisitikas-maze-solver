@@ -23,6 +23,7 @@ if __name__ == "__main__":
     ev3_distance_sensors = EV3UltrasoundDistanceDetectors()
     ev3_distance_sensors.start()
     ev3_gyro = Gyro()
+    ev3_gyro.start()
     motors = EV3Motors(distance_sensors = ev3_distance_sensors, gyro = ev3_gyro)
     wall_detector = EV3WallDetector(distance_sensors = ev3_distance_sensors)
     maze_solver = CuriousMazeSolver(
