@@ -78,7 +78,6 @@ class EV3Motors(Motors):
     def move_forward(self, no_of_squares: int = 1):
         print('DEBUG - EV3Motors: move_forward')
         _angle_before = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro before moving forward={}'.format(_angle_before))
         _speed = SpeedRPM(self._move_forward_speed_percent * self._move_forward_speed_factor)
         _move_time_sec = self._get_move_square_forward_time_sec(no_of_squares = no_of_squares)
         self._motor_pair.on_for_seconds(
@@ -88,49 +87,56 @@ class EV3Motors(Motors):
             brake=True, block=True
         )
         _angle_after = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro after moving forward and before correction={}'.format(_angle_after))
+        print('DEBUG - EV3Motors: gyro angle change before correction={}'.format(_angle_after - _angle_before))
         self._correct_after_move_forward()
         print('DEBUG - EV3Motors: move_forward done')
 
     def turn_left(self):
+        print('DEBUG - EV3Motors: turn_left')
         _power_current = self._power_supply.measured_amps
         _power_voltage = self._power_supply.measured_volts
         print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
-        _angle_before_turn = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro before turning left={}'.format(_angle_before_turn))
+        _angle_before = self._gyro.get_orientation()
+        _compensating_factor = 8.0
+        print('DEBUG - EV3Motors: gcompensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.LEFT_ON_SPOT.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
-            degrees = self._motor_degrees_for_90_degree_turn + 4.0, 
+            degrees = self._motor_degrees_for_90_degree_turn + _compensating_factor, 
             brake=True, block=True
         )
         self._last_time_right_corrected = False
         self._last_time_left_corrected = False
-        _angle_after_turn = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro after turning left={}'.format(_angle_after_turn))
+        _angle_after = self._gyro.get_orientation()
+        print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        print('DEBUG - EV3Motors: turn_left done')
 
     def turn_right(self):
+        print('DEBUG - EV3Motors: turn_right')
         _power_current = self._power_supply.measured_amps
         _power_voltage = self._power_supply.measured_volts
         print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
-        _angle_before_turn = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro before turning right={}'.format(_angle_before_turn))
+        _angle_before = self._gyro.get_orientation()
+        _compensating_factor = 3.5
+        print('DEBUG - EV3Motors: gcompensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.RIGHT_ON_SPOT.value, 
             speed = SpeedRPM(self._turn_speed_percent), 
-            degrees = self._motor_degrees_for_90_degree_turn + 2.5, 
+            degrees = self._motor_degrees_for_90_degree_turn + _compensating_factor, 
             brake=True, block=True
         )
         self._last_time_right_corrected = False
         self._last_time_left_corrected = False
-        _angle_after_turn = self._gyro.get_orientation()
-        print('DEBUG - EV3Motors: gyro after turning right={}'.format(_angle_after_turn))
+        _angle_after = self._gyro.get_orientation()
+        print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        print('DEBUG - EV3Motors: turn_right done')
 
     def turn_back(self):
+        print('DEBUG - EV3Motors: turn_back')
         _power_current = self._power_supply.measured_amps
         _power_voltage = self._power_supply.measured_volts
         print('DEBUG - EV3Motors: power current={}, voltage={}'.format(_power_current, _power_voltage))
-        print('DEBUG - EV3Motors: gyro before turning back={}'.format(self._gyro.get_orientation()))
+        _angle_before = self._gyro.get_orientation()
         self._motor_pair.on_for_degrees(
             steering = random.choice([Steering.LEFT_ON_SPOT.value, Steering.RIGHT_ON_SPOT.value]), 
             speed = SpeedRPM(self._turn_speed_percent), 
@@ -139,7 +145,9 @@ class EV3Motors(Motors):
         )
         self._last_time_right_corrected = False
         self._last_time_left_corrected = False
-        print('DEBUG - EV3Motors: gyro after turning back={}'.format(self._gyro.get_orientation()))
+        _angle_after = self._gyro.get_orientation()
+        print('DEBUG - EV3Motors: gyro angle change={}'.format(_angle_after - _angle_before))
+        print('DEBUG - EV3Motors: turn_back done')
 
     def no_turn(self):
         pass
