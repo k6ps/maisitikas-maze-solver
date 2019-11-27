@@ -2,10 +2,8 @@ import math
 import time
 import random
 import enum
-from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveSteering, MoveDifferential, SpeedPercent, SpeedRPM
-from ev3dev2.wheel import EV3EducationSetTire
+from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveSteering, SpeedRPM
 from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
-from ev3.steering_corrector import SteeringCorrector, Correction
 from ev3.gyro import Gyro
 from maze_solver.maze_solver import Motors
 
