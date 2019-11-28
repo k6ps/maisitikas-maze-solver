@@ -44,8 +44,8 @@ class EV3Motors(Motors):
 
     def _get_move_square_forward_time_sec(self, front_distance_mm: float, no_of_squares: int = 1):
         _length_mm = self._maze_square_length_mm
-        if no_of_squares == 1 and front_distance_mm < self._maze_square_length_mm:
-            _length_mm = self._maze_square_length_mm - front_distance_mm
+        # if no_of_squares == 1 and front_distance_mm < self._maze_square_length_mm:
+        #     _length_mm = self._maze_square_length_mm - front_distance_mm
         _rotations = (no_of_squares * _length_mm) / self._wheel_circumference_mm
         return _rotations / (self._move_forward_speed_percent / 60)
 
