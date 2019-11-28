@@ -25,7 +25,7 @@ class EV3Motors(Motors):
         self._gyro = gyro
         self._motor_pair = MoveSteering(OUTPUT_A, OUTPUT_B)
         self._power_supply = PowerSupply()
-        self._position_corrector = PositionCorrector(self._motor_pair)
+        self._position_corrector = PositionCorrector(self._motor_pair, self._gyro)
         self._steering_correction_motor_degrees = 10
         self._steering_correction_speed_rpm = 15
         self._motor_degrees_for_90_degree_turn = 131.5
