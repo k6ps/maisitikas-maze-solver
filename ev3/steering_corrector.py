@@ -2,6 +2,7 @@ from enum import Enum
 from maze_solver.kwargs_util import KwArgsUtil
 from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
 
+# TODO: Remove, replaced by PositionCorrector
 
 class Correction(Enum):
     LEFT = -1

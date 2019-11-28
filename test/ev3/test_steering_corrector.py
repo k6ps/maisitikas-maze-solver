@@ -4,6 +4,9 @@ from test.ev3.ev3dev_test_util import Ev3devTestUtil
 Ev3devTestUtil.create_fake_ev3dev2_module()
 from ev3.steering_corrector import SteeringCorrector, Correction
 
+# TODO: Remove, replaced by PositionCorrector
+
+
 class SteeringCorrectorTest(unittest.TestCase):
 
     def setUp(self):
