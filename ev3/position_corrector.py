@@ -12,7 +12,7 @@ class PositionCorrector(object):
         self._logger = logger or logging.getLogger(__name__)
         self._motor_pair = ev3_motor_pair
         self._gyro = ev3_gyro
-        self._wheel_diameter_mm = 56
+        self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
         self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(80, 'ideal_side_turn_angle', **kwargs)
         self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(3.0, 'ideal_distance_cm', **kwargs)
@@ -169,7 +169,7 @@ class PositionCorrector(object):
         else:
             if self._is_front_distance_too_short(distances_before['front']) and self._can_front_distance_be_corrected_backward(distances_before['front']):
                 self._logger.debug('Too small front distance before movement. I am at good angle but too near the next front wall')
-                self._correct_front_distance(distances_before['front'] - (self._ideal_distance_cm + self._square_length_cm))
+                self._correct_front_distance(self._get_distance_remainder_cm(distances_before['front']))
             self._correct_distances(distances_before, distances_after)
         self._logger.debug('correct_after_move_forward done')
 
