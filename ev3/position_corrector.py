@@ -1,5 +1,7 @@
 import logging
+import math
 from maze_solver.kwargs_util import KwArgsUtil
+from ev3.steering import Steering
 from ev3dev2.motor import MoveSteering, SpeedRPM
 
 
@@ -7,15 +9,22 @@ class PositionCorrector(object):
 
     def __init__(self, ev3_motor_pair: MoveSteering, logger = None, **kwargs):
         self._logger = logger or logging.getLogger(__name__)
-        self._ev3_motor_pair = ev3_motor_pair
+        self._motor_pair = ev3_motor_pair
+        self._wheel_diameter_mm = 56
+        self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
+        self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(15, 'ideal_distance_cm', **kwargs)
+        self._min_front_distance_correction_mm = KwArgsUtil.kwarg_or_default(5.6, 'min_front_distance_correction_mm', **kwargs)
+        self._correction_speed_rpm = KwArgsUtil.kwarg_or_default(15, 'correction_speed_rpm', **kwargs)
+        self._move_forward_speed_factor = KwArgsUtil.kwarg_or_default(-1, 'move_forward_speed_factor', **kwargs)
         self._bad_distance_lower_treshold_cm = KwArgsUtil.kwarg_or_default(4.0, 'bad_distance_lower_treshold_cm', **kwargs)
         self._bad_distance_upper_treshold_cm = KwArgsUtil.kwarg_or_default(16.0, 'bad_distance_upper_treshold_cm', **kwargs)
-        self._too_small_distance_upper_treshold_cm = KwArgsUtil.kwarg_or_default(3.0, 'too_small_distance_upper_treshold_cm', **kwargs)
-        self._min_reliable_distance_sensor_value_cm = KwArgsUtil.kwarg_or_default(3.1, 'min_reliable_distance_sensor_value_cm', **kwargs)
+        self._too_small_distance_upper_treshold_cm = KwArgsUtil.kwarg_or_default(3.2, 'too_small_distance_upper_treshold_cm', **kwargs)
+        self._min_reliable_distance_sensor_value_cm = KwArgsUtil.kwarg_or_default(3.2, 'min_reliable_distance_sensor_value_cm', **kwargs)
         self._square_length_cm = KwArgsUtil.kwarg_or_default(18.0, 'square_length_cm', **kwargs)
         self._move_forward_bad_angle_min_treshold = KwArgsUtil.kwarg_or_default(15, 'move_forward_bad_angle_min_treshold', **kwargs)
         self._turn_side_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(55, 'turn_side_bad_angle_max_treshold', **kwargs)
         self._turn_back_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(120, 'turn_back_bad_angle_max_treshold', **kwargs)
+        self._max_front_distance_to_correct_cm = KwArgsUtil.kwarg_or_default(7.0, 'max_front_distance_to_correct_cm', **kwargs)
 
     def _get_distance_remainder_cm(self, distance_cm: float) -> float:
         return distance_cm % self._square_length_cm
@@ -83,9 +92,24 @@ class PositionCorrector(object):
             _right_distance_remainder_cm
         ))
 
+    def _correct_front_distance(self, front_distance_cm: float):
+        _distance_to_compensate_mm = (front_distance_cm - self._ideal_distance_cm) * 10
+        if _distance_to_compensate_mm > self._min_front_distance_correction_mm:
+            self._logger.debug('Need to correct front distance for {} mm'.format(_distance_to_compensate_mm))
+            self._motor_pair.on_for_rotations(
+                steering=Steering.STRAIGHT.value, 
+                speed=SpeedRPM(self._correction_speed_rpm * self._move_forward_speed_factor), 
+                rotations=(_distance_to_compensate_mm / self._wheel_circumference_mm),
+                brake=True, block=True
+            )
+
+    def _is_front_distance_within_correctable_limits(self, front_distance_cm: float) -> bool:
+        return front_distance_cm < self._max_front_distance_to_correct_cm
+
     def _correct_distances(self, distances: dict):
-        if self._is_only_front_distance_bad(distances):
+        if self._is_only_front_distance_bad(distances) and self._is_front_distance_within_correctable_limits(distances['front']):
             self._logger.debug('Bad front distance. I am at good angle but too far')
+            self._correct_front_distance(distances['front'])
         elif self._is_front_and_right_bad_and_left_too_close(distances):
             self._logger.debug('Bad front and right distances, small left distance. I am at bad angle too much to the right')
         elif self._is_front_and_left_bad_and_right_too_close(distances):
