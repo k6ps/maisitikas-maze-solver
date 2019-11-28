@@ -8,13 +8,8 @@ from ev3dev2.power import PowerSupply
 from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
 from ev3.gyro import Gyro
 from ev3.position_corrector import PositionCorrector
+from ev3.steering import Steering
 from maze_solver.maze_solver import Motors
-
-
-class Steering(enum.Enum):
-    STRAIGHT = 0
-    LEFT_ON_SPOT = -100
-    RIGHT_ON_SPOT = 100
 
 
 class EV3Motors(Motors):
