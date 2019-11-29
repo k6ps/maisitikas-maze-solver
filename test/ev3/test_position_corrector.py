@@ -6,6 +6,8 @@ from unittest.mock import call, MagicMock, Mock
 from test.ev3.ev3dev_test_util import Ev3devTestUtil
 Ev3devTestUtil.create_fake_ev3dev2_module()
 from ev3.position_corrector import PositionCorrector
+from ev3.steering import Steering
+
 
 class PositionCorrectorTests(unittest.TestCase):
 
@@ -14,10 +16,16 @@ class PositionCorrectorTests(unittest.TestCase):
         self._ev3_motor_pair = MagicMock()
         self._gyro = MagicMock()
         self._test_wheel_diameter_mm = 10
+        self._test_ideal_side_turn_angle = 90
+        self._test_turn_side_bad_angle_max_treshold = 60
+        self._test_wheelbase_width_at_centers_mm = 150
         self._position_corrector = PositionCorrector(
             ev3_motor_pair=self._ev3_motor_pair, 
             ev3_gyro=self._gyro,
-            wheel_diameter_mm = self._test_wheel_diameter_mm
+            wheel_diameter_mm = self._test_wheel_diameter_mm,
+            ideal_side_turn_angle = self._test_ideal_side_turn_angle,
+            turn_side_bad_angle_max_treshold = self._test_turn_side_bad_angle_max_treshold,
+            wheelbase_width_at_centers_mm = self._test_wheelbase_width_at_centers_mm
         )
 
     def _set_up_console_logging(self):
@@ -25,6 +33,9 @@ class PositionCorrectorTests(unittest.TestCase):
         console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
         logging.basicConfig(level=logging.INFO, handlers=[console_handler])
         logging.getLogger('ev3.position_corrector').setLevel(logging.DEBUG)
+
+    def _calculate_expected_rotations_for_robot_turn(self, robot_turn_degrees: int) -> float:
+        return (self._test_wheelbase_width_at_centers_mm * robot_turn_degrees) / (self._test_wheel_diameter_mm * 360)
 
     def _assert_no_corrections_made(self):
         self._ev3_motor_pair.on_for_degrees.assert_not_called()
@@ -58,3 +69,33 @@ class MoveForwardCorrectionTests(PositionCorrectorTests):
         args, kwargs = self._ev3_motor_pair.on_for_rotations.call_args
         _expected_rotations = -(2.0 / (self._test_wheel_diameter_mm / 10 * math.pi))
         self.assertAlmostEqual(_expected_rotations, kwargs.get('rotations'), places=3)
+
+
+class TurnLeftCorrectionTests(PositionCorrectorTests):
+
+    def test_should_correct_turn_when_turned_too_little(self):
+        _distances_before = {'left': 18.0 + 3.0, 'right': 3.0, 'front': 3.0}
+        _distances_after = {'left': 3.0, 'right': 3.0, 'front': 18.0 + 3.0}
+        self._position_corrector.correct_after_turn_left(_distances_before, 0, _distances_after, -45)
+        print(self._ev3_motor_pair.mock_calls)
+        # self.assertEqual(2, len(self._ev3_motor_pair.mock_calls))
+        self._ev3_motor_pair.on_for_rotations.assert_called()
+        args, kwargs = self._ev3_motor_pair.on_for_rotations.call_args
+        _expected_rotations = self._calculate_expected_rotations_for_robot_turn(45)
+        self.assertAlmostEqual(_expected_rotations, kwargs.get('rotations'), places=3)
+        self.assertEqual(Steering.LEFT_ON_SPOT.value, kwargs.get('steering'))
+
+
+class TurnRightCorrectionTests(PositionCorrectorTests):
+
+    def test_should_correct_turn_when_turned_too_little(self):
+        _distances_before = {'left': 3.0, 'right': 18.0 + 3.0, 'front': 3.0}
+        _distances_after = {'left': 3.0, 'right': 3.0, 'front': 18.0 + 3.0}
+        self._position_corrector.correct_after_turn_right(_distances_before, 0, _distances_after, 45)
+        print(self._ev3_motor_pair.mock_calls)
+        # self.assertEqual(2, len(self._ev3_motor_pair.mock_calls))
+        self._ev3_motor_pair.on_for_rotations.assert_called()
+        args, kwargs = self._ev3_motor_pair.on_for_rotations.call_args
+        _expected_rotations = self._calculate_expected_rotations_for_robot_turn(45)
+        self.assertAlmostEqual(_expected_rotations, kwargs.get('rotations'), places=3)
+        self.assertEqual(Steering.RIGHT_ON_SPOT.value, kwargs.get('steering'))

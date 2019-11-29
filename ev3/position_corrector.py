@@ -13,6 +13,7 @@ class PositionCorrector(object):
         self._motor_pair = ev3_motor_pair
         self._gyro = ev3_gyro
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
+        self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(130.2, 'wheelbase_width_at_centers_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
         self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(80, 'ideal_side_turn_angle', **kwargs)
         self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(3.0, 'ideal_distance_cm', **kwargs)
@@ -129,6 +130,16 @@ class PositionCorrector(object):
         else:
             self._logger.debug('All distances are good')
 
+    def _correct_bad_angle_after_turn(self, angle_before: int, angle_after: int, steering: Steering):
+        _angle_diff = self._ideal_side_turn_angle - abs(angle_after - angle_before)
+        self._logger.debug('Angle diff = {}'.format(_angle_diff))
+        _rotations = (self._wheelbase_width_at_centers_mm * _angle_diff) / (self._wheel_diameter_mm * 360)
+        self._motor_pair.on_for_rotations(
+            steering=steering.value, 
+            speed=SpeedRPM(self._correction_speed_rpm), 
+            rotations=_rotations
+        )
+
     def correct_after_move_forward(self, 
         distances_before: dict, 
         angle_before: int, 
@@ -159,19 +170,7 @@ class PositionCorrector(object):
         _is_angle_bad = self._has_gyro_angle_changed_too_little_for_side_turn(angle_before, angle_after)
         if _is_angle_bad:
             self._logger.debug('Bad gyro angle. I hit the wall on left turn and turned too little.')
-            _angle_diff = self._ideal_side_turn_angle - abs(angle_after - angle_before)
-            self._logger.debug('Angle diff = {}'.format(_angle_diff))
-            
-            # _angle_before_correction = self._gyro.get_orientation()
-            # _desired_angle_after_correction = _angle_before_correction - _angle_diff
-            # _attempts_left = 10
-            # while self._gyro.get_orientation() > _desired_angle_after_correction and _attempts_left > 0:
-            #     self._motor_pair.on_for_degrees(
-            #         steering=Steering.LEFT_ON_SPOT.value, 
-            #         speed=SpeedRPM(self._correction_speed_rpm), 
-            #         degrees=10
-            #     )
-            #     _attempts_left -= 1
+            self._correct_bad_angle_after_turn(angle_before, angle_after, Steering.LEFT_ON_SPOT)
         self._logger.debug('correct_after_turn_left done')
 
     def correct_after_turn_right(self, 
@@ -186,18 +185,7 @@ class PositionCorrector(object):
         _is_angle_bad = self._has_gyro_angle_changed_too_little_for_side_turn(angle_before, angle_after)
         if _is_angle_bad:
             self._logger.debug('Bad gyro angle. I hit the wall on right turn and turned too little.')
-            _angle_diff = self._ideal_side_turn_angle - abs(angle_after - angle_before)  
-            self._logger.debug('Angle diff = {}'.format(_angle_diff))
-            _angle_before_correction = self._gyro.get_orientation()
-            _desired_angle_after_correction = _angle_before_correction + _angle_diff
-            _attempts_left = 10
-            while self._gyro.get_orientation() < _desired_angle_after_correction and _attempts_left > 0:
-                self._motor_pair.on_for_degrees(
-                    steering=Steering.RIGHT_ON_SPOT.value, 
-                    speed=SpeedRPM(self._correction_speed_rpm), 
-                    degrees=10
-                )
-                _attempts_left -= 1
+            self._correct_bad_angle_after_turn(angle_before, angle_after, Steering.RIGHT_ON_SPOT)
         self._logger.debug('correct_after_turn_right done')
 
     def correct_after_turn_back(self, 
