@@ -9,6 +9,7 @@ from ev3.gyro import Gyro
 from ev3.position_corrector import PositionCorrector
 from ev3.steering import Steering
 from maze_solver.maze_solver import Motors
+from maze_solver.kwargs_util import KwArgsUtil
 
 
 class EV3Motors(Motors):
@@ -17,147 +18,95 @@ class EV3Motors(Motors):
         self, 
         distance_sensors: EV3UltrasoundDistanceDetectors, 
         gyro: Gyro,
-        logger = None
+        logger = None,
+        **kwargs
     ):
         self._logger = logger or logging.getLogger(__name__)
         self._distance_sensors = distance_sensors
         self._gyro = gyro
         self._motor_pair = MoveSteering(OUTPUT_A, OUTPUT_B)
         self._position_corrector = PositionCorrector(self._motor_pair, self._gyro, self._distance_sensors)
-        self._motor_degrees_for_90_degree_turn = 131.5
-        self._maze_square_length_mm = 180
-        self._move_forward_speed_rpm = 50
-        self._motor_pair_polarity_factor = -1
-        self._turn_speed_rpm = 50
-        self._wheel_diameter_mm = 56
+        self._maze_square_length_mm = KwArgsUtil.kwarg_or_default(180, 'maze_square_length_mm', **kwargs)
+        self._move_forward_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'move_forward_speed_rpm', **kwargs)
+        self._motor_pair_polarity_factor = KwArgsUtil.kwarg_or_default(-1, 'motor_pair_polarity_factor', **kwargs)
+        self._turn_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'turn_speed_rpm', **kwargs)
+        self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
-        self._wheelbase_width_mm = 130.2
+        self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(130.2, 'wheelbase_width_at_centers_mm', **kwargs)
 
-    def _get_current_time_milliseconds(self):
-        return int(round(time.time() * 1000))
-
-    def _get_move_square_forward_time_sec(self, front_distance_mm: float, no_of_squares: int = 1):
-        _length_mm = self._maze_square_length_mm
-        _rotations = (no_of_squares * _length_mm) / self._wheel_circumference_mm
-        return _rotations / (self._move_forward_speed_rpm / 60)
-
-    def move_forward(self, no_of_squares: int = 1):
-        self._logger.debug('Move_forward')
-        _distances_before = self._distance_sensors.get_distances()
-        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
-            _distances_before['left'],
-            _distances_before['right'],
-            _distances_before['front']
+    def _log_distances_and_angle(self, phase: str, distances: dict, angle: int):
+        self._logger.debug('Distances {}: left={}, right={}, front={}'.format(
+            phase,
+            distances['left'],
+            distances['right'],
+            distances['front']
         ))
-        _angle_before = self._gyro.get_orientation()
-        self._logger.debug('Gyro angle before={}'.format(_angle_before))
-        _speed = SpeedRPM(self._move_forward_speed_rpm * self._motor_pair_polarity_factor)
-        _move_time_sec = self._get_move_square_forward_time_sec(
-            front_distance_mm = _distances_before['front'] * 10, 
-            no_of_squares = no_of_squares
-        )
-        self._motor_pair.on_for_seconds(
+        self._logger.debug('Gyro angle {}={}'.format(phase, angle))
+
+    def _move_forward_mm(self, distance_mm: float, speed_rpm: int):
+        _speed = SpeedRPM(speed_rpm * self._motor_pair_polarity_factor)
+        _rotations = distance_mm / self._wheel_circumference_mm
+        self._motor_pair.on_for_rotations(
             steering=Steering.STRAIGHT.value, 
             speed=_speed, 
-            seconds=_move_time_sec,
+            rotations=_rotations,
             brake=True, block=True
         )
-        _angle_after = self._gyro.get_orientation()
-        self._logger.debug('Gyro angle change before correction={}'.format(_angle_after - _angle_before))
+
+    def _turn_on_spot_deg(self, direction: Steering, degrees: int):
+        _rotations = (self._wheelbase_width_at_centers_mm * degrees) / (self._wheel_diameter_mm * 360)
+        self._motor_pair.on_for_rotations(
+            steering=direction.value, 
+            speed=SpeedRPM(self._turn_speed_rpm), 
+            rotations=_rotations
+        )
+
+    def move_forward(self):
+        self._logger.debug('Move_forward')
+        _distances_before = self._distance_sensors.get_distances()
+        _angle_before = self._gyro.get_orientation()
+        self._log_distances_and_angle('before', _distances_before, _angle_before)
+        self._move_forward_mm(distance_mm=self._maze_square_length_mm, speed_rpm=self._move_forward_speed_rpm)
         _distances_after = self._distance_sensors.get_distances()
-        self._logger.debug('Distances after move before correction: left={}, right={}, front={}'.format(
-            _distances_after['left'],
-            _distances_after['right'],
-            _distances_after['front']
-        ))
+        _angle_after = self._gyro.get_orientation()
+        self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_move_forward(_distances_before, _angle_before, _distances_after, _angle_after)
         self._logger.debug('Move_forward done')
 
     def turn_left(self):
         self._logger.debug('turn_left')
-        _angle_before = self._gyro.get_orientation()
         _distances_before = self._distance_sensors.get_distances()
-        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
-            _distances_before['left'],
-            _distances_before['right'],
-            _distances_before['front']
-        ))
-        _compensating_factor = 4.0
-        self._logger.debug('Compensating factor={}'.format(_compensating_factor))
-        self._motor_pair.on_for_degrees(
-            steering = Steering.LEFT_ON_SPOT.value, 
-            speed = SpeedRPM(self._turn_speed_rpm), 
-            degrees = self._motor_degrees_for_90_degree_turn + _compensating_factor, 
-            brake=True, block=True
-        )
-        _angle_after = self._gyro.get_orientation()
-        self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
+        _angle_before = self._gyro.get_orientation()
+        self._log_distances_and_angle('before', _distances_before, _angle_before)
+        self._turn_on_spot_deg(direction=Steering.LEFT_ON_SPOT, degrees=90)
         _distances_after = self._distance_sensors.get_distances()
-        self._logger.debug('Distances after: left={}, right={}, front={}'.format(
-            _distances_after['left'],
-            _distances_after['right'],
-            _distances_after['front']
-        ))
+        _angle_after = self._gyro.get_orientation()
+        self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_left(_distances_before, _angle_before, _distances_after, _angle_after)
         self._logger.debug('turn_left done')
 
     def turn_right(self):
         self._logger.debug('turn_right')
-        _angle_before = self._gyro.get_orientation()
         _distances_before = self._distance_sensors.get_distances()
-        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
-            _distances_before['left'],
-            _distances_before['right'],
-            _distances_before['front']
-        ))
-        _compensating_factor = 1.0
-        self._logger.debug('Compensating factor={}'.format(_compensating_factor))
-        self._motor_pair.on_for_degrees(
-            steering = Steering.RIGHT_ON_SPOT.value, 
-            speed = SpeedRPM(self._turn_speed_rpm), 
-            degrees = self._motor_degrees_for_90_degree_turn + _compensating_factor, 
-            brake=True, block=True
-        )
-        _angle_after = self._gyro.get_orientation()
-        self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
+        _angle_before = self._gyro.get_orientation()
+        self._log_distances_and_angle('before', _distances_before, _angle_before)
+        self._turn_on_spot_deg(direction=Steering.RIGHT_ON_SPOT, degrees=90)
         _distances_after = self._distance_sensors.get_distances()
-        self._logger.debug('Distances after: left={}, right={}, front={}'.format(
-            _distances_after['left'],
-            _distances_after['right'],
-            _distances_after['front']
-        ))
+        _angle_after = self._gyro.get_orientation()
+        self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_right(_distances_before, _angle_before, _distances_after, _angle_after)
         self._logger.debug('turn_right done')
 
     def turn_back(self):
         self._logger.debug('turn_back')
-        _angle_before = self._gyro.get_orientation()
         _distances_before = self._distance_sensors.get_distances()
-        self._logger.debug('Distances before: left={}, right={}, front={}'.format(
-            _distances_before['left'],
-            _distances_before['right'],
-            _distances_before['front']
-        ))
-        _compensating_factor_left = 4.0
-        _compensating_factor_right = 1.0
-        self._logger.debug('Compensating factor left={}'.format(_compensating_factor_left))
-        self._logger.debug('Compensating factor right={}'.format(_compensating_factor_right))
+        _angle_before = self._gyro.get_orientation()
+        self._log_distances_and_angle('before', _distances_before, _angle_before)
         _steering = random.choice([Steering.LEFT_ON_SPOT, Steering.RIGHT_ON_SPOT])
-        _compensating_factor = _compensating_factor_left if _steering == Steering.LEFT_ON_SPOT else _compensating_factor_right
-        self._motor_pair.on_for_degrees(
-            steering = _steering.value, 
-            speed = SpeedRPM(self._turn_speed_rpm), 
-            degrees = 2 * (self._motor_degrees_for_90_degree_turn + _compensating_factor), 
-            brake=True, block=True
-        )
-        _angle_after = self._gyro.get_orientation()
-        self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
+        self._turn_on_spot_deg(direction=_steering, degrees=180)
         _distances_after = self._distance_sensors.get_distances()
-        self._logger.debug('Distances after: left={}, right={}, front={}'.format(
-            _distances_after['left'],
-            _distances_after['right'],
-            _distances_after['front']
-        ))
+        _angle_after = self._gyro.get_orientation()
+        self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_back(_distances_before, _angle_before, _distances_after, _angle_after)
         self._logger.debug('turn_back done')
 
