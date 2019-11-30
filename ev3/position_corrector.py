@@ -35,7 +35,7 @@ class PositionCorrector(object):
         self._min_reliable_distance_sensor_value_cm = KwArgsUtil.kwarg_or_default(3.2, 'min_reliable_distance_sensor_value_cm', **kwargs)
         self._square_length_cm = KwArgsUtil.kwarg_or_default(18.0, 'square_length_cm', **kwargs)
         self._move_forward_bad_angle_min_treshold = KwArgsUtil.kwarg_or_default(15, 'move_forward_bad_angle_min_treshold', **kwargs)
-        self._turn_side_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(65, 'turn_side_bad_angle_max_treshold', **kwargs)
+        self._turn_side_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(55, 'turn_side_bad_angle_max_treshold', **kwargs)
         self._turn_back_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(120, 'turn_back_bad_angle_max_treshold', **kwargs)
         self._max_front_distance_to_correct_forward_cm = KwArgsUtil.kwarg_or_default(7.0, 'max_front_distance_to_correct_forward_cm', **kwargs)
         self._max_front_distance_to_correct_backward_cm = KwArgsUtil.kwarg_or_default(21.0, 'max_front_distance_to_correct_backward_cm', **kwargs)
