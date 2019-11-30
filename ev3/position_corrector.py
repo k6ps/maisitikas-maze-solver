@@ -3,19 +3,28 @@ import math
 from maze_solver.kwargs_util import KwArgsUtil
 from ev3.steering import Steering
 from ev3.gyro import Gyro
+from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
 from ev3dev2.motor import MoveSteering, SpeedRPM
 
 
 class PositionCorrector(object):
 
-    def __init__(self, ev3_motor_pair: MoveSteering, ev3_gyro: Gyro, logger = None, **kwargs):
+    def __init__(
+        self, 
+        ev3_motor_pair: MoveSteering, 
+        ev3_gyro: Gyro, 
+        ev3_distance_sensors: EV3UltrasoundDistanceDetectors, 
+        logger = None, 
+        **kwargs
+    ):
         self._logger = logger or logging.getLogger(__name__)
         self._motor_pair = ev3_motor_pair
         self._gyro = ev3_gyro
+        self._distance_sensors = ev3_distance_sensors
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(130.2, 'wheelbase_width_at_centers_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
-        self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(80, 'ideal_side_turn_angle', **kwargs)
+        self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(65, 'ideal_side_turn_angle', **kwargs)
         self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(3.0, 'ideal_distance_cm', **kwargs)
         self._min_front_distance_correction_mm = KwArgsUtil.kwarg_or_default(5.0, 'min_front_distance_correction_mm', **kwargs)
         self._correction_speed_rpm = KwArgsUtil.kwarg_or_default(15, 'correction_speed_rpm', **kwargs)
@@ -140,6 +149,33 @@ class PositionCorrector(object):
             rotations=_rotations
         )
 
+    def _recover_from_hitting_wall(self, angle_before: int, angle_after: int):
+        self._motor_pair.on_for_rotations(
+            steering=Steering.STRAIGHT.value, 
+            speed=SpeedRPM(self._correction_speed_rpm * self._move_forward_speed_factor), 
+            rotations=-(2.0 * 10 / self._wheel_circumference_mm),
+            brake=True, block=True
+        )
+        _angle_diff = angle_after - angle_before
+        _steering = Steering.LEFT_ON_SPOT if _angle_diff > 0 else Steering.RIGHT_ON_SPOT
+        _rotations = (self._wheelbase_width_at_centers_mm * abs(_angle_diff)) / (self._wheel_diameter_mm * 360)
+        self._motor_pair.on_for_rotations(
+            steering=_steering.value, 
+            speed=SpeedRPM(self._correction_speed_rpm), 
+            rotations=_rotations
+        )
+        _front_distance = self._get_distance_remainder_cm(self._distance_sensors.get_distances()['front'] - self._ideal_distance_cm)
+        _angle_before_front_distance_correction = self._gyro.get_orientation()
+        self._motor_pair.on_for_rotations(
+            steering=Steering.STRAIGHT.value, 
+            speed=SpeedRPM(self._correction_speed_rpm * self._move_forward_speed_factor), 
+            rotations=_front_distance * 10 / self._wheel_circumference_mm
+        )
+        _angle_after_front_distance_correction = self._gyro.get_orientation()
+        if (self._has_gyro_angle_changed_too_much_for_move_forward(_angle_before_front_distance_correction, _angle_after_front_distance_correction)):
+            self._logger.debug('Bad gyro angle when recovering from hitting wall. I have hit the wall again')
+            self._recover_from_hitting_wall(_angle_before_front_distance_correction, _angle_after_front_distance_correction)
+
     def correct_after_move_forward(self, 
         distances_before: dict, 
         angle_before: int, 
@@ -151,6 +187,7 @@ class PositionCorrector(object):
         _is_angle_bad = self._has_gyro_angle_changed_too_much_for_move_forward(angle_before, angle_after)
         if _is_angle_bad:
             self._logger.debug('Bad gyro angle. I have hit the wall')
+            self._recover_from_hitting_wall(angle_before, angle_after)
         else:
             if self._is_front_distance_too_short(distances_before['front']) and self._can_front_distance_be_corrected_backward(distances_before['front']):
                 self._logger.debug('Too small front distance before movement. I am at good angle but too near the next front wall')
