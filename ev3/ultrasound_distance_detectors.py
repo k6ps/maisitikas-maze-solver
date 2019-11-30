@@ -1,16 +1,13 @@
 import time
 import logging
-from threading import Thread
+from ev3.simple_worker_thread import SimplePeriodicWorkerThread
 from ev3dev2.sensor.lego import UltrasonicSensor
 
-class EV3UltrasoundDistanceDetectors(Thread):
+class EV3UltrasoundDistanceDetectors(SimplePeriodicWorkerThread):
 
     def __init__(self, logger = None):
         self._logger = logger or logging.getLogger(__name__)
-        Thread.__init__(self)
-        self.setName('EV3UltrasoundDistanceDetectors')
-        self._stop_command_received = False
-        self._reading_cycle_length_ms = 100
+        super().__init__(thread_name = 'EV3UltrasoundDistanceDetectors')
         self._sensor_left = UltrasonicSensor(address='in4')
         self._sensor_front = UltrasonicSensor(address='in3')
         self._sensor_right = UltrasonicSensor(address='in2')
@@ -26,34 +23,17 @@ class EV3UltrasoundDistanceDetectors(Thread):
         if len(queue) > self._LAST_DISTANCES_QUEUE_MAX_LENGTH:
             queue.pop(0)
 
-    def _get_current_time_milliseconds(self):
-        return int(round(time.time() * 1000))
-
-    def _wait_until_end_of_cycle_time(self, cycle_start_time):
-        _cycle_end_time = self._get_current_time_milliseconds()
-        _cycle_time = _cycle_end_time - cycle_start_time
-        if (_cycle_time < self._reading_cycle_length_ms):
-            time.sleep((self._reading_cycle_length_ms - _cycle_time) * 0.001)
-
-    def run(self):
-        self._logger.debug('Starting')
-        while (self._stop_command_received == False):
-            _cycle_start_time = self._get_current_time_milliseconds()
-            self._distance_left = round(self._sensor_left.distance_centimeters, 1)
-            self._distance_front = round(self._sensor_front.distance_centimeters, 1)
-            self._distance_right = round(self._sensor_right.distance_centimeters, 1)
-            self._logger.debug('left={}, front={}, right={}'.format(
-                self._distance_left, 
-                self._distance_front, 
-                self._distance_right
-            ))
-            self._add_distance_to_queue(self._last_distances_queue_left, self._distance_left)
-            self._add_distance_to_queue(self._last_distances_queue_right, self._distance_right)
-            self._wait_until_end_of_cycle_time(_cycle_start_time)
-        self._logger.debug('Stopped')
-
-    def stop(self):
-        self._stop_command_received = True
+    def perform_cycle(self):
+        self._distance_left = round(self._sensor_left.distance_centimeters, 1)
+        self._distance_front = round(self._sensor_front.distance_centimeters, 1)
+        self._distance_right = round(self._sensor_right.distance_centimeters, 1)
+        self._logger.debug('left={}, front={}, right={}'.format(
+            self._distance_left, 
+            self._distance_front, 
+            self._distance_right
+        ))
+        self._add_distance_to_queue(self._last_distances_queue_left, self._distance_left)
+        self._add_distance_to_queue(self._last_distances_queue_right, self._distance_right)
 
     def get_distances(self):
         # It is ok to read slightly outdated data
@@ -62,19 +42,3 @@ class EV3UltrasoundDistanceDetectors(Thread):
             'front': self._distance_front,
             'right': self._distance_right
         }
-
-    # TODO: move these four mehtods to steering corrector
-    # TODO: make every value a parameter
-    def are_n_last_left_distances_between_x_and_y(self, n: int = 10, x: float = 3.4, y: float = 6.0):
-        _count = 0
-        for i in range(1, n + 1):
-            if self._last_distances_queue_left[-i] > x and self._last_distances_queue_left[-i] <= y:
-                _count += 1
-        return _count > 0.6 * n
-
-    def are_n_last_right_distances_between_x_and_y(self, n: int = 10, x: float = 3.4, y: float = 6.0):
-        _count = 0
-        for i in range(1, n + 1):
-            if self._last_distances_queue_right[-i] > x and self._last_distances_queue_right[-i] <= y:
-                _count += 1
-        return _count > 0.6 * n
