@@ -22,6 +22,7 @@ def set_up_async_file_logging() -> list:
     logging.basicConfig(level=logging.INFO, handlers=[console_queue_handler, file_queue_handler])
     logging.getLogger('ev3.position_corrector').setLevel(logging.DEBUG)
     logging.getLogger('ev3.wall_detector').setLevel(logging.DEBUG)
+    logging.getLogger('ev3.motors').setLevel(logging.DEBUG)
     return [console_log_message_queue_listener, file_log_message_queue_listener]
 
 
