@@ -22,7 +22,7 @@ class PositionCorrector(object):
         self._gyro = ev3_gyro
         self._distance_sensors = ev3_distance_sensors
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
-        self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(130.2, 'wheelbase_width_at_centers_mm', **kwargs)
+        self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(97.5, 'wheelbase_width_at_centers_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
         self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(65, 'ideal_side_turn_angle', **kwargs)
         self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(3.0, 'ideal_distance_cm', **kwargs)

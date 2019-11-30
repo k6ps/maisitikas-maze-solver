@@ -32,7 +32,7 @@ class EV3Motors(Motors):
         self._turn_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'turn_speed_rpm', **kwargs)
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
-        self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(130.2, 'wheelbase_width_at_centers_mm', **kwargs)
+        self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(97.5, 'wheelbase_width_at_centers_mm', **kwargs)
 
     def _log_distances_and_angle(self, phase: str, distances: dict, angle: int):
         self._logger.debug('Distances {}: left={}, right={}, front={}'.format(
