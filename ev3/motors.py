@@ -4,7 +4,6 @@ import random
 import enum
 import logging
 from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveSteering, SpeedRPM
-from ev3dev2.power import PowerSupply
 from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
 from ev3.gyro import Gyro
 from ev3.position_corrector import PositionCorrector
@@ -24,11 +23,10 @@ class EV3Motors(Motors):
         self._distance_sensors = distance_sensors
         self._gyro = gyro
         self._motor_pair = MoveSteering(OUTPUT_A, OUTPUT_B)
-        self._power_supply = PowerSupply()
         self._position_corrector = PositionCorrector(self._motor_pair, self._gyro, self._distance_sensors)
         self._motor_degrees_for_90_degree_turn = 131.5
         self._maze_square_length_mm = 180
-        self._move_forward_speed_percent = 35
+        self._move_forward_speed_percent = 50
         self._move_forward_speed_factor = -1
         self._turn_speed_percent = 50
         self._wheel_diameter_mm = 56
@@ -45,7 +43,6 @@ class EV3Motors(Motors):
 
     def move_forward(self, no_of_squares: int = 1):
         self._logger.debug('Move_forward')
-        time.sleep(0.1)
         _distances_before = self._distance_sensors.get_distances()
         self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances_before['left'],
@@ -66,7 +63,6 @@ class EV3Motors(Motors):
         )
         _angle_after = self._gyro.get_orientation()
         self._logger.debug('Gyro angle change before correction={}'.format(_angle_after - _angle_before))
-        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         self._logger.debug('Distances after move before correction: left={}, right={}, front={}'.format(
             _distances_after['left'],
@@ -78,11 +74,7 @@ class EV3Motors(Motors):
 
     def turn_left(self):
         self._logger.debug('turn_left')
-        _power_current = self._power_supply.measured_amps
-        _power_voltage = self._power_supply.measured_volts
-        self._logger.debug('Power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
-        time.sleep(0.1)
         _distances_before = self._distance_sensors.get_distances()
         self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances_before['left'],
@@ -99,7 +91,6 @@ class EV3Motors(Motors):
         )
         _angle_after = self._gyro.get_orientation()
         self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
-        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         self._logger.debug('Distances after: left={}, right={}, front={}'.format(
             _distances_after['left'],
@@ -111,11 +102,7 @@ class EV3Motors(Motors):
 
     def turn_right(self):
         self._logger.debug('turn_right')
-        _power_current = self._power_supply.measured_amps
-        _power_voltage = self._power_supply.measured_volts
-        self._logger.debug('Power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
-        time.sleep(0.1)
         _distances_before = self._distance_sensors.get_distances()
         self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances_before['left'],
@@ -132,7 +119,6 @@ class EV3Motors(Motors):
         )
         _angle_after = self._gyro.get_orientation()
         self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
-        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         self._logger.debug('Distances after: left={}, right={}, front={}'.format(
             _distances_after['left'],
@@ -144,11 +130,7 @@ class EV3Motors(Motors):
 
     def turn_back(self):
         self._logger.debug('turn_back')
-        _power_current = self._power_supply.measured_amps
-        _power_voltage = self._power_supply.measured_volts
-        self._logger.debug('Power current={}, voltage={}'.format(_power_current, _power_voltage))
         _angle_before = self._gyro.get_orientation()
-        time.sleep(0.1)
         _distances_before = self._distance_sensors.get_distances()
         self._logger.debug('Distances before: left={}, right={}, front={}'.format(
             _distances_before['left'],
@@ -169,7 +151,6 @@ class EV3Motors(Motors):
         )
         _angle_after = self._gyro.get_orientation()
         self._logger.debug('Gyro angle change={}'.format(_angle_after - _angle_before))
-        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         self._logger.debug('Distances after: left={}, right={}, front={}'.format(
             _distances_after['left'],
