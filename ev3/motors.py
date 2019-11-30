@@ -26,9 +26,9 @@ class EV3Motors(Motors):
         self._position_corrector = PositionCorrector(self._motor_pair, self._gyro, self._distance_sensors)
         self._motor_degrees_for_90_degree_turn = 131.5
         self._maze_square_length_mm = 180
-        self._move_forward_speed_percent = 50
-        self._move_forward_speed_factor = -1
-        self._turn_speed_percent = 50
+        self._move_forward_speed_rpm = 50
+        self._motor_pair_polarity_factor = -1
+        self._turn_speed_rpm = 50
         self._wheel_diameter_mm = 56
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
         self._wheelbase_width_mm = 130.2
@@ -39,7 +39,7 @@ class EV3Motors(Motors):
     def _get_move_square_forward_time_sec(self, front_distance_mm: float, no_of_squares: int = 1):
         _length_mm = self._maze_square_length_mm
         _rotations = (no_of_squares * _length_mm) / self._wheel_circumference_mm
-        return _rotations / (self._move_forward_speed_percent / 60)
+        return _rotations / (self._move_forward_speed_rpm / 60)
 
     def move_forward(self, no_of_squares: int = 1):
         self._logger.debug('Move_forward')
@@ -50,7 +50,8 @@ class EV3Motors(Motors):
             _distances_before['front']
         ))
         _angle_before = self._gyro.get_orientation()
-        _speed = SpeedRPM(self._move_forward_speed_percent * self._move_forward_speed_factor)
+        self._logger.debug('Gyro angle before={}'.format(_angle_before))
+        _speed = SpeedRPM(self._move_forward_speed_rpm * self._motor_pair_polarity_factor)
         _move_time_sec = self._get_move_square_forward_time_sec(
             front_distance_mm = _distances_before['front'] * 10, 
             no_of_squares = no_of_squares
@@ -85,7 +86,7 @@ class EV3Motors(Motors):
         self._logger.debug('Compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.LEFT_ON_SPOT.value, 
-            speed = SpeedRPM(self._turn_speed_percent), 
+            speed = SpeedRPM(self._turn_speed_rpm), 
             degrees = self._motor_degrees_for_90_degree_turn + _compensating_factor, 
             brake=True, block=True
         )
@@ -113,7 +114,7 @@ class EV3Motors(Motors):
         self._logger.debug('Compensating factor={}'.format(_compensating_factor))
         self._motor_pair.on_for_degrees(
             steering = Steering.RIGHT_ON_SPOT.value, 
-            speed = SpeedRPM(self._turn_speed_percent), 
+            speed = SpeedRPM(self._turn_speed_rpm), 
             degrees = self._motor_degrees_for_90_degree_turn + _compensating_factor, 
             brake=True, block=True
         )
@@ -145,7 +146,7 @@ class EV3Motors(Motors):
         _compensating_factor = _compensating_factor_left if _steering == Steering.LEFT_ON_SPOT else _compensating_factor_right
         self._motor_pair.on_for_degrees(
             steering = _steering.value, 
-            speed = SpeedRPM(self._turn_speed_percent), 
+            speed = SpeedRPM(self._turn_speed_rpm), 
             degrees = 2 * (self._motor_degrees_for_90_degree_turn + _compensating_factor), 
             brake=True, block=True
         )
