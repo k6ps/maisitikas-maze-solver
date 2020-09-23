@@ -153,7 +153,7 @@ class MazeSolver(object):
     def move_forward_to_next_square(self):
         self._motors.move_forward()
 
-    def next_move(self):
+    def next_move(self) -> bool:
         self._logger.debug('Starting move')
 
         if self._finish_detector.is_finish():
