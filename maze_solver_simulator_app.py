@@ -8,6 +8,7 @@ from simulator.maze_factory import create_robotex_cyprus_2017_maze, create_a_rea
 # TODO: make these parameters
 _SAMPLE_SIZE = 1000
 _TIME_LIMIT_SEC = 300
+_MAX_MOVES_PER_SESSION = 999
 
 def set_up_console_logging():
     console_handler = logging.StreamHandler(sys.stdout)
@@ -25,7 +26,7 @@ def perform_experiment(maze: Maze, center_coordinates: list) -> dict:
             prefer_unvisited_paths_weight = 3,
             prefer_closer_to_center_weight = 5, 
             prefer_no_turns_weight = 0,
-            max_moves=999,
+            max_moves=_MAX_MOVES_PER_SESSION,
             center_coordinates=center_coordinates
         )
         _results = simulator_session.start()
