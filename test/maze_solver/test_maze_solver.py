@@ -336,41 +336,20 @@ class InNonFinishSquareWithAllSidesUnblocked(BaseMazeResolverTest):
         self.assertFalse (self._maze_solver.next_move())
 
 
-class BorderlessMazeWithNoWallsAndNoFinish(BaseMazeResolverTest):
-
-    def setUp(self):
-        super().setUp()
-        self.prepare_mock_wall_detector(left_blocked = False, front_blocked = False, right_blocked = False)
-        self.prepare_call_recorder()
-        self._test_max_call_count = 13
-
-    def test_should_perform_maximum_allowed_number_of_moves(self):
-        self._maze_solver.max_moves = self._test_max_call_count
-        self._maze_solver.start()
-        _move_forward_call_count = 0
-        for actual_call in self._call_recorder.mock_calls:
-            if str(actual_call) == 'call.the_mock_motors.move_forward()':
-                _move_forward_call_count += 1
-        self.assertEqual(self._test_max_call_count, _move_forward_call_count)
-
-    def test_should_notfy_max_call_count_reached(self):
-        self._maze_solver.max_moves = self._test_max_call_count
-        self._maze_solver.start()
-        self._outputs.notify.assert_called_with(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._test_max_call_count))
-
-
 class SingleStraightFiveSquarePathAheadToFinish(BaseMazeResolverTest):
 
     def setUp(self):
         super().setUp()
         self.prepare_mock_wall_detector(front_blocked = False)
         self.prepare_call_recorder()
-        self._test_max_call_count = 13
         self._finish_detector.is_finish.side_effect = [False, False, False, False, False, True]
 
     def test_should_perform_five_moves(self):
-        self._maze_solver.max_moves = self._test_max_call_count
-        self._maze_solver.start()
+        _finished = False
+        _move_count = 0
+        while not _finished and _move_count < 10:
+            _finished = self._maze_solver.next_move()
+            _move_count += 1
         _move_forward_call_count = 0
         for actual_call in self._call_recorder.mock_calls:
             if str(actual_call) == 'call.the_mock_motors.move_forward()':
@@ -378,8 +357,11 @@ class SingleStraightFiveSquarePathAheadToFinish(BaseMazeResolverTest):
         self.assertEqual(5, _move_forward_call_count)
 
     def test_should_notfy_finished_successfully(self):
-        self._maze_solver.max_moves = self._test_max_call_count
-        self._maze_solver.start()
+        _finished = False
+        _move_count = 0
+        while not _finished and _move_count < 10:
+            _finished = self._maze_solver.next_move()
+            _move_count += 1
         self._outputs.notify.assert_called_with(NotificationType.INFO, 'Finised successfully in finish square!')
 
 

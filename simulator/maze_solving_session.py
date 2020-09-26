@@ -16,14 +16,26 @@ class MazeSolvingSession(object):
     def current_direction(self) -> Direction:
         return self._current_direction
 
-    def __init__(self, maze: Maze, maze_solver: MazeSolver):
+    @property
+    def move_count(self) -> int:
+        return self._move_count
+
+    def __init__(self, maze: Maze, maze_solver: MazeSolver, max_moves: int = 9999, logger = None):
+        self._logger = logger or logging.getLogger(__name__)
         self._maze = maze
         self._maze_solver = maze_solver
+        self._max_moves = max_moves
         self._current_square = self._maze.get_start_square()
         self._current_direction = Direction.NORTH
+        self._move_count = 0
 
     def start(self) -> int:
-        return self._maze_solver.start()
+        _finished_or_cannot_move = False
+        while (not _finished_or_cannot_move) and self._move_count < self._max_moves:
+            self._logger.debug('Move count={}'.format(self._move_count))
+            _finished_or_cannot_move = self._maze_solver.next_move()
+            self._move_count += 1
+        return self._move_count
 
 
 class SimulatorMazeSolvingSession(MazeSolvingSession):
@@ -34,7 +46,6 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
         prefer_unvisited_paths_weight,
         prefer_closer_to_center_weight,
         prefer_no_turns_weight,
-        max_moves,
         center_coordinates,
     ):
         _motors = SimulatorMotors(
@@ -60,7 +71,6 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             prefer_unvisited_paths_weight=prefer_unvisited_paths_weight,
             prefer_closer_to_center_weight=prefer_closer_to_center_weight,
             prefer_no_turns_weight=prefer_no_turns_weight,
-            max_moves=max_moves,
             center_coordinates=center_coordinates
         )
 
@@ -89,11 +99,10 @@ class SimulatorMazeSolvingSession(MazeSolvingSession):
             prefer_unvisited_paths_weight,
             prefer_closer_to_center_weight,
             prefer_no_turns_weight,
-            max_moves,
             center_coordinates
         )
         self._motion_time_in_seconds = 0
-        super().__init__(maze, _simulator_maze_solver)
+        super().__init__(maze, _simulator_maze_solver, max_moves=max_moves)
 
     def is_direction_from_current_square_blocked(self, direction: Direction) -> bool:
         if direction.value['x'] == 1:

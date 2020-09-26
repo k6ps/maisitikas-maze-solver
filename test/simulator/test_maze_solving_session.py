@@ -20,9 +20,50 @@ class MazeSolvingSessionTests(unittest.TestCase):
     def test_should_place_maze_solver_facing_north_before_start(self):
         self.assertEqual(Direction.NORTH, self._maze_solving_session.current_direction)
 
-    def test_should_call_start_on_maze_solver_when_started(self):
+    def test_should_zero_move_counter_before_start(self):
+        self.assertEqual(0, self._maze_solving_session.move_count)
+
+    def test_should_call_next_move_on_maze_solver_when_started(self):
         self._maze_solving_session.start()
-        self._maze_solver.start.assert_called()
+        self._maze_solver.next_move.assert_called()
+
+    def test_should_increment_move_counter_when_started(self):
+        self._maze_solving_session.start()
+        self.assertEqual(1, self._maze_solving_session.move_count)
+
+    def test_should_call_next_move_five_times_when_previous_not_finished_and_can_move_four_times(self):
+        self._maze_solver.next_move.side_effect =[False, False, False, False, True]
+        self._maze_solving_session.start()
+        self.assertEqual(5, len(self._maze_solver.next_move.call_args_list))
+
+    def test_should_increment_move_counter_five_times_when_previous_not_finished_and_can_move_four_times(self):
+        self._maze_solver.next_move.side_effect =[False, False, False, False, True]
+        self._maze_solving_session.start()
+        self.assertEqual(5, self._maze_solving_session.move_count)
+
+    def test_should_returm_correct_move_count_when_previous_not_finished_and_can_move_four_times(self):
+        self._maze_solver.next_move.side_effect =[False, False, False, False, True]
+        _count = self._maze_solving_session.start()
+        self.assertEqual(5, _count)
+
+    def test_should_call_next_move_three_times_when_max_move_count_is_three_and_can_move_at_least_three_times(self):
+        self._maze_solving_session = MazeSolvingSession(maze = self._maze, maze_solver = self._maze_solver, max_moves=3)
+        self._maze_solver.next_move.side_effect =[False, False, False, False, True]
+        self._maze_solving_session.start()
+        self.assertEqual(3, len(self._maze_solver.next_move.call_args_list))
+
+    def test_should_increment_move_counter_three_times_when_max_move_count_is_three_and_can_move_at_least_three_times(self):
+        self._maze_solving_session = MazeSolvingSession(maze = self._maze, maze_solver = self._maze_solver, max_moves=3)
+        self._maze_solver.next_move.side_effect =[False, False, False, False, True]
+        self._maze_solving_session.start()
+        self.assertEqual(3, self._maze_solving_session.move_count)
+
+    def test_should_returm_correct_move_count_when_max_move_count_is_three_and_can_move_at_least_three_times(self):
+        self._maze_solving_session = MazeSolvingSession(maze = self._maze, maze_solver = self._maze_solver, max_moves=3)
+        self._maze_solver.next_move.side_effect =[False, False, False, False, True]
+        _count = self._maze_solving_session.start()
+        self.assertEqual(3, _count)
+
 
 class SimulatorMazeSolvingSessionTests(unittest.TestCase):
 

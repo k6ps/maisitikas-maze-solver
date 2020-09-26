@@ -71,21 +71,12 @@ class MazeSolver(object):
     * next_turn_all_unblocked
     """
 
-    @property
-    def max_moves(self) -> int:
-        return self._max_moves
-
-    @max_moves.setter
-    def max_moves(self, value: int):
-        self._max_moves = value
-
     def __init__(
         self, 
         motors: Motors, 
         wall_detector: WallDetector, 
         finish_detector: FinishDetector, 
         outputs: Outputs, 
-        max_moves: int = 9999,
         logger = None
     ):
         self._logger = logger or logging.getLogger(__name__)
@@ -93,7 +84,6 @@ class MazeSolver(object):
         self._wall_detector = wall_detector
         self._finish_detector = finish_detector
         self._outputs = outputs
-        self._max_moves = max_moves
         random.seed()
 
     def call_one_in_random(self, call_list):
@@ -170,18 +160,6 @@ class MazeSolver(object):
         self.move_forward_to_next_square()
         self._logger.debug('Move done, ready for next')
         return False
-
-    def start(self) -> int:
-        _move_count = 0
-        _finished_or_cannot_move = False
-        while not _finished_or_cannot_move and _move_count < self._max_moves:
-            self._logger.debug('Move count={}'.format(_move_count))
-            _finished_or_cannot_move = self.next_move()
-            _move_count += 1
-        if not _finished_or_cannot_move and _move_count >= self._max_moves:
-            self._logger.warning('Maximum allowed move count={} reached!'.format(self._max_moves))
-            self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
-        return _move_count
 
 
 class RandomWalkerMazeSolver(MazeSolver):
