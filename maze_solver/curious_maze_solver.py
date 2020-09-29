@@ -118,11 +118,10 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         prefer_unvisited_paths_weight: int = 2,
         prefer_closer_to_center_weight: int = 3,
         prefer_no_turns_weight: int = 1,
-        max_moves: int = 9999,
         center_coordinates: list = [8, 9],
         logger = None
     ):
-        super().__init__(motors, wall_detector, finish_detector, outputs, max_moves)
+        super().__init__(motors, wall_detector, finish_detector, outputs)
         self._logger = logger or logging.getLogger(__name__)
         self.reset_to_start_and_forget_everything()
         self._prefer_non_dead_ends_weight = prefer_non_dead_ends_weight
