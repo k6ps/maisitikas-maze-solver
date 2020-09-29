@@ -39,7 +39,7 @@ The ev3dev2 module does not have to be installed for running unit tests - i fake
 Running the simulation application:
 ```
 cd /app
-python .\maze_solver_simulator_app.py
+python ./maze_solver_simulator_app.py
 ```
 
 # EV3 robot
