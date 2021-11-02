@@ -3,7 +3,7 @@ import math
 from maze_solver.kwargs_util import KwArgsUtil
 from ev3.steering import Steering
 from ev3.gyro import Gyro
-from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
+from ev3.distance_detectors import EV3DistanceDetectors
 from ev3dev2.motor import MoveSteering, SpeedRPM
 
 
@@ -13,7 +13,7 @@ class PositionCorrector(object):
         self, 
         ev3_motor_pair: MoveSteering, 
         ev3_gyro: Gyro, 
-        ev3_distance_sensors: EV3UltrasoundDistanceDetectors, 
+        ev3_distance_sensors: EV3DistanceDetectors, 
         logger = None, 
         **kwargs
     ):

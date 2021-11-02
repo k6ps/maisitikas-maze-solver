@@ -3,11 +3,11 @@ import logging
 from ev3.simple_worker_thread import SimplePeriodicWorkerThread
 from ev3dev2.sensor.lego import UltrasonicSensor
 
-class EV3UltrasoundDistanceDetectors(SimplePeriodicWorkerThread):
+class EV3DistanceDetectors(SimplePeriodicWorkerThread):
 
     def __init__(self, logger = None):
         self._logger = logger or logging.getLogger(__name__)
-        super().__init__(thread_name = 'EV3UltrasoundDistanceDetectors')
+        super().__init__(thread_name = 'EV3DistanceDetectors')
         self._sensor_left = UltrasonicSensor(address='in4')
         self._sensor_front = UltrasonicSensor(address='in3')
         self._sensor_right = UltrasonicSensor(address='in2')

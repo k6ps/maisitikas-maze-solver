@@ -2,13 +2,13 @@ import time
 import logging
 from maze_solver.kwargs_util import KwArgsUtil
 from maze_solver.maze_solver import WallDetector
-from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
+from ev3.distance_detectors import EV3DistanceDetectors
 
 class EV3WallDetector(WallDetector):
 
     def __init__(
         self, 
-        distance_sensors: EV3UltrasoundDistanceDetectors, 
+        distance_sensors: EV3DistanceDetectors, 
         logger = None, 
         **kwargs
     ):

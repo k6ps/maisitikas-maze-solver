@@ -1,7 +1,7 @@
 import logging
 from ev3.motors import EV3Motors
 from ev3.wall_detector import EV3WallDetector
-from ev3.ultrasound_distance_detectors import EV3UltrasoundDistanceDetectors
+from ev3.distance_detectors import EV3DistanceDetectors
 from ev3.gyro import Gyro
 from ev3.buttons import EV3Buttons
 from ev3.simple_worker_thread import SimplePeriodicWorkerThread
@@ -26,7 +26,7 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
     def __init__(self, logger = None):
         self._logger = logger or logging.getLogger(__name__)
         super().__init__(thread_name = 'EV3MazeSolver')
-        self._ev3_distance_sensors = EV3UltrasoundDistanceDetectors()
+        self._ev3_distance_sensors = EV3DistanceDetectors()
         self._ev3_distance_sensors.start()
         self._ev3_gyro = Gyro()
         self._ev3_gyro.start()
