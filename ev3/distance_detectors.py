@@ -10,7 +10,7 @@ class EV3DistanceDetectors(SimplePeriodicWorkerThread):
         self._logger = logger or logging.getLogger(__name__)
         super().__init__(thread_name = 'EV3DistanceDetectors')
         self._sensor_left = LightDistanceSensor(address='in3')
-        self._sensor_front = UtrasoundDistanceSensor(address='in1')
+        self._sensor_front = LightDistanceSensor(address='in1')
         self._sensor_right = LightDistanceSensor(address='in4')
         self._distance_left = 255.0
         self._distance_front = 255.0
