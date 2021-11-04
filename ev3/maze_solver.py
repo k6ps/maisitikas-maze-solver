@@ -26,6 +26,7 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
     def __init__(self, logger = None):
         self._logger = logger or logging.getLogger(__name__)
         super().__init__(thread_name = 'EV3MazeSolver')
+        self._max_moves = 100
         self._ev3_distance_sensors = EV3DistanceDetectors()
         self._ev3_distance_sensors.start()
         self._ev3_gyro = Gyro()
@@ -42,6 +43,18 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
         self._ev3_buttons.start()
         self._ev3_buttons.add_enter_button_listener(self.start_maze_solving)
 
+    def solve_maze(self) -> int:
+        _move_count = 0
+        _finished_or_cannot_move = False
+        while not _finished_or_cannot_move and _move_count < self._max_moves:
+            self._logger.debug('Move count={}'.format(_move_count))
+            _finished_or_cannot_move = self._maze_solver.next_move()
+            _move_count += 1
+        if not _finished_or_cannot_move and _move_count >= self._max_moves:
+            self._logger.warning('Maximum allowed move count={} reached!'.format(self._max_moves))
+            # self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
+        return _move_count
+
     def run(self):
         super().run()
         self._ev3_gyro.stop()
@@ -55,7 +68,7 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
     def start_maze_solving(self):
         self._logger.debug('Start event received')
         self._ev3_buttons.remove_enter_button_listener()
-        self._maze_solver.start()
+        self.solve_maze()
 
     def stop(self):
         self._logger.debug('Stop event received')
