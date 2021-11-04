@@ -28,7 +28,7 @@ class EV3Motors(Motors):
         self._position_corrector = PositionCorrector(self._motor_pair, self._gyro, self._distance_sensors)
         self._maze_square_length_mm = KwArgsUtil.kwarg_or_default(180, 'maze_square_length_mm', **kwargs)
         self._move_forward_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'move_forward_speed_rpm', **kwargs)
-        self._motor_pair_polarity_factor = KwArgsUtil.kwarg_or_default(-1, 'motor_pair_polarity_factor', **kwargs)
+        self._motor_pair_polarity_factor = KwArgsUtil.kwarg_or_default(1, 'motor_pair_polarity_factor', **kwargs)
         self._turn_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'turn_speed_rpm', **kwargs)
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
