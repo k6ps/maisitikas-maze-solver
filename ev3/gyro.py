@@ -8,7 +8,7 @@ class Gyro(SimplePeriodicWorkerThread):
     def __init__(self, logger=None):
         self._logger = logger or logging.getLogger(__name__)
         super().__init__(thread_name = 'EV3Gyro')
-        self._gyro = GyroSensor(address='in1')
+        self._gyro = GyroSensor(address='in2')
         self._gyro.mode = GyroSensor.MODE_GYRO_ANG
         self._gyro.reset()
         self._angle = 0
