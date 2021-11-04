@@ -25,4 +25,7 @@ class Gyro(SimplePeriodicWorkerThread):
     def get_orientation(self):
         # It is ok to read a little outdated data
         return self._angle
-        
+
+    def reset(self):
+        self._gyro.reset()
+                
