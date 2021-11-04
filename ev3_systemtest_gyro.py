@@ -9,5 +9,5 @@ if __name__ == "__main__":
     for _ in range(10):
         _angle = gyro.get_orientation()
         print('Angle = {}'.format(_angle))
-        time.sleep(0.5)
+        time.sleep(1)
     gyro.stop()
