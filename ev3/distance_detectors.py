@@ -1,16 +1,18 @@
+import re
 import time
+import math
 import logging
 from ev3.simple_worker_thread import SimplePeriodicWorkerThread
-from ev3dev2.sensor.lego import UltrasonicSensor
+from ev3dev2.sensor.lego import UltrasonicSensor, ColorSensor
 
 class EV3DistanceDetectors(SimplePeriodicWorkerThread):
 
     def __init__(self, logger = None):
         self._logger = logger or logging.getLogger(__name__)
         super().__init__(thread_name = 'EV3DistanceDetectors')
-        self._sensor_left = UltrasonicSensor(address='in4')
-        self._sensor_front = UltrasonicSensor(address='in3')
-        self._sensor_right = UltrasonicSensor(address='in2')
+        self._sensor_left = LightDistanceSensor(address='in3')
+        self._sensor_front = UtrasoundDistanceSensor(address='in1')
+        self._sensor_right = LightDistanceSensor(address='in4')
         self._distance_left = 255.0
         self._distance_front = 255.0
         self._distance_right = 255.0
@@ -24,9 +26,9 @@ class EV3DistanceDetectors(SimplePeriodicWorkerThread):
             queue.pop(0)
 
     def perform_cycle(self):
-        self._distance_left = round(self._sensor_left.distance_centimeters, 1)
-        self._distance_front = round(self._sensor_front.distance_centimeters, 1)
-        self._distance_right = round(self._sensor_right.distance_centimeters, 1)
+        self._distance_left = self._sensor_left.distance_centimeters()
+        self._distance_front = self._sensor_front.distance_centimeters()
+        self._distance_right = self._sensor_right.distance_centimeters()
         self._logger.debug('left={}, front={}, right={}'.format(
             self._distance_left, 
             self._distance_front, 
@@ -42,3 +44,39 @@ class EV3DistanceDetectors(SimplePeriodicWorkerThread):
             'front': self._distance_front,
             'right': self._distance_right
         }
+
+class UtrasoundDistanceSensor(object):
+
+    def __init__(self, address: str, logger = None):
+        self._logger = logger or logging.getLogger(__name__)
+        self._ev3_ultrasonic_sensor = UltrasonicSensor(address=address)
+
+    def distance_centimeters(self) -> float: 
+        _measured_distance = self._ev3_ultrasonic_sensor.distance_centimeters
+        return round(_measured_distance, 1)
+
+class AngledUtrasoundDistanceSensor(object):
+
+    def __init__(self, address: str, logger = None):
+        self._logger = logger or logging.getLogger(__name__)
+        self._ev3_ultrasonic_sensor = UltrasonicSensor(address=address)
+
+    def distance_centimeters(self) -> float: 
+        _measured_distance = self._ev3_ultrasonic_sensor.distance_centimeters
+        _sensor_angle_degrees = 40
+        _calculated_distance = (7.3 * math.sin(math.radians(_sensor_angle_degrees))) / (math.cos(math.radians(_sensor_angle_degrees)))
+        return round(_calculated_distance, 1)
+
+class LightDistanceSensor(object):
+
+    def __init__(self, address: str, logger = None):
+        self._logger = logger or logging.getLogger(__name__)
+        self._ev3_color_sensor = ColorSensor(address=address)
+
+    def distance_centimeters(self) -> float: 
+        _reflected_light_intensity = self._ev3_color_sensor.reflected_light_intensity
+        if _reflected_light_intensity <= 0:
+            return 255.0
+        else:
+            # Experimentally found logarithmic function for distance: 
+            return round( ( math.log(_reflected_light_intensity / 105)) / ( math.log(0.555) ), 1)
