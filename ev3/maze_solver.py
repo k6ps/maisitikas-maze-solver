@@ -68,6 +68,7 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
     def start_maze_solving(self):
         self._logger.debug('Start event received')
         self._ev3_buttons.remove_enter_button_listener()
+        self._ev3_gyro.reset()
         self.solve_maze()
 
     def stop(self):
