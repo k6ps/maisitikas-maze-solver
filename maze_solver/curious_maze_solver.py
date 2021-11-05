@@ -96,8 +96,8 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         prefer_unvisited_paths_weight: int = 2,
         prefer_closer_to_center_weight: int = 3,
         prefer_no_turns_weight: int = 1,
-        # center_coordinates: list = [8, 9],
-        center_coordinates: list = [4],
+        center_coordinates: list = [8, 9],
+        # center_coordinates: list = [4],
         logger = None
     ):
         super().__init__(motors, wall_detector, finish_detector, outputs)
