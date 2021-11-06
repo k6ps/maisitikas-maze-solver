@@ -2,7 +2,7 @@ import time
 import math
 import logging
 from ev3.simple_worker_thread import SimplePeriodicWorkerThread
-from ev3dev2.sensor.lego import UltrasonicSensor, ColorSensor
+from ev3dev2.sensor.lego import ColorSensor
 
 class EV3DistanceDetectors(SimplePeriodicWorkerThread):
 
@@ -44,27 +44,6 @@ class EV3DistanceDetectors(SimplePeriodicWorkerThread):
             'right': self._distance_right
         }
 
-class UtrasoundDistanceSensor(object):
-
-    def __init__(self, address: str, logger = None):
-        self._logger = logger or logging.getLogger(__name__)
-        self._ev3_ultrasonic_sensor = UltrasonicSensor(address=address)
-
-    def distance_centimeters(self) -> float: 
-        _measured_distance = self._ev3_ultrasonic_sensor.distance_centimeters
-        return round(_measured_distance, 1)
-
-class AngledUtrasoundDistanceSensor(object):
-
-    def __init__(self, address: str, logger = None):
-        self._logger = logger or logging.getLogger(__name__)
-        self._ev3_ultrasonic_sensor = UltrasonicSensor(address=address)
-
-    def distance_centimeters(self) -> float: 
-        _measured_distance = self._ev3_ultrasonic_sensor.distance_centimeters
-        _sensor_angle_degrees = 40
-        _calculated_distance = (7.3 * math.sin(math.radians(_sensor_angle_degrees))) / (math.cos(math.radians(_sensor_angle_degrees)))
-        return round(_calculated_distance, 1)
 
 class LightDistanceSensor(object):
 
