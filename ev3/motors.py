@@ -27,12 +27,13 @@ class EV3Motors(Motors):
         self._motor_pair = MoveSteering(OUTPUT_A, OUTPUT_B)
         self._position_corrector = PositionCorrector(self._motor_pair, self._gyro, self._distance_sensors)
         self._maze_square_length_mm = KwArgsUtil.kwarg_or_default(180, 'maze_square_length_mm', **kwargs)
-        self._move_forward_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'move_forward_speed_rpm', **kwargs)
+        self._move_forward_speed_rpm = KwArgsUtil.kwarg_or_default(60, 'move_forward_speed_rpm', **kwargs)
         self._motor_pair_polarity_factor = KwArgsUtil.kwarg_or_default(1, 'motor_pair_polarity_factor', **kwargs)
         self._turn_speed_rpm = KwArgsUtil.kwarg_or_default(50, 'turn_speed_rpm', **kwargs)
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
         self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(97.5, 'wheelbase_width_at_centers_mm', **kwargs)
+        self._turns_until_next_angle_corretion = 3
 
     def _log_distances_and_angle(self, phase: str, distances: dict, angle: int):
         self._logger.debug('Distances {}: left={}, right={}, front={}'.format(
@@ -61,12 +62,35 @@ class EV3Motors(Motors):
             rotations=_rotations
         )
 
+    def _correct_angle_using_back_wall(self, previous_distance_to_check: float):
+        if self._turns_until_next_angle_corretion <= 0:
+            if previous_distance_to_check < 4:
+                self._logger.debug('I am correcting my angle using the back wall...')
+                self._motor_pair.on_for_rotations(
+                    steering=Steering.STRAIGHT.value, 
+                    speed=SpeedRPM(25 * -1), 
+                    rotations=(80.0 / self._wheel_circumference_mm),
+                    brake=True, block=True
+                )
+                self._motor_pair.on_for_rotations(
+                    steering=Steering.STRAIGHT.value, 
+                    speed=SpeedRPM(25 * 1), 
+                    rotations=(20.0 / self._wheel_circumference_mm),
+                    brake=True, block=True
+                )
+                self._turns_until_next_angle_corretion = 3
+        else:
+            self._turns_until_next_angle_corretion = self._turns_until_next_angle_corretion -1
+
+
     def move_forward(self):
         self._logger.debug('Move_forward')
         _distances_before = self._distance_sensors.get_distances()
         _angle_before = self._gyro.get_orientation()
         self._log_distances_and_angle('before', _distances_before, _angle_before)
         self._move_forward_mm(distance_mm=self._maze_square_length_mm, speed_rpm=self._move_forward_speed_rpm)
+        # Allow some time for motors to stop and gyro to react
+        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         _angle_after = self._gyro.get_orientation()
         self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
@@ -78,11 +102,32 @@ class EV3Motors(Motors):
         _distances_before = self._distance_sensors.get_distances()
         _angle_before = self._gyro.get_orientation()
         self._log_distances_and_angle('before', _distances_before, _angle_before)
-        self._turn_on_spot_deg(direction=Steering.LEFT_ON_SPOT, degrees=90)
+        self._turn_on_spot_deg(direction=Steering.LEFT_ON_SPOT, degrees=74)
+        # Allow some time for motors to stop and gyro to react
+        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         _angle_after = self._gyro.get_orientation()
         self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_left(_distances_before, _angle_before, _distances_after, _angle_after)
+        self._correct_angle_using_back_wall(_distances_before['right'])
+        # if self._turns_until_next_angle_corretion <= 0:
+        #     if _distances_before['right'] < 4:
+        #         self._logger.debug('I am correcting my angle using the back wall...')
+        #         self._motor_pair.on_for_rotations(
+        #             steering=Steering.STRAIGHT.value, 
+        #             speed=SpeedRPM(25 * -1), 
+        #             rotations=(80.0 / self._wheel_circumference_mm),
+        #             brake=True, block=True
+        #         )
+        #         self._motor_pair.on_for_rotations(
+        #             steering=Steering.STRAIGHT.value, 
+        #             speed=SpeedRPM(25 * 1), 
+        #             rotations=(20.0 / self._wheel_circumference_mm),
+        #             brake=True, block=True
+        #         )
+        #         self._turns_until_next_angle_corretion = 3
+        # else:
+        #     self._turns_until_next_angle_corretion = self._turns_until_next_angle_corretion -1
         self._logger.debug('turn_left done')
 
     def turn_right(self):
@@ -90,24 +135,39 @@ class EV3Motors(Motors):
         _distances_before = self._distance_sensors.get_distances()
         _angle_before = self._gyro.get_orientation()
         self._log_distances_and_angle('before', _distances_before, _angle_before)
-        self._turn_on_spot_deg(direction=Steering.RIGHT_ON_SPOT, degrees=90)
+        self._turn_on_spot_deg(direction=Steering.RIGHT_ON_SPOT, degrees=74)
+        # Allow some time for motors to stop and gyro to react
+        time.sleep(0.1)
         _distances_after = self._distance_sensors.get_distances()
         _angle_after = self._gyro.get_orientation()
         self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_right(_distances_before, _angle_before, _distances_after, _angle_after)
+        self._correct_angle_using_back_wall(_distances_before['left'])
+        # if self._turns_until_next_angle_corretion <= 0:
+        #     if _distances_before['left'] < 4:
+        #         self._logger.debug('I am correcting my angle using the back wall...')
+        #         self._motor_pair.on_for_rotations(
+        #             steering=Steering.STRAIGHT.value, 
+        #             speed=SpeedRPM(25 * -1), 
+        #             rotations=(80.0 / self._wheel_circumference_mm),
+        #             brake=True, block=True
+        #         )
+        #         self._motor_pair.on_for_rotations(
+        #             steering=Steering.STRAIGHT.value, 
+        #             speed=SpeedRPM(25 * 1), 
+        #             rotations=(20.0 / self._wheel_circumference_mm),
+        #             brake=True, block=True
+        #         )
+        #         self._turns_until_next_angle_corretion = 3
+        # else:
+        #     self._turns_until_next_angle_corretion = self._turns_until_next_angle_corretion -1
         self._logger.debug('turn_right done')
 
     def turn_back(self):
         self._logger.debug('turn_back')
-        _distances_before = self._distance_sensors.get_distances()
-        _angle_before = self._gyro.get_orientation()
-        self._log_distances_and_angle('before', _distances_before, _angle_before)
-        _steering = random.choice([Steering.LEFT_ON_SPOT, Steering.RIGHT_ON_SPOT])
-        self._turn_on_spot_deg(direction=_steering, degrees=180)
-        _distances_after = self._distance_sensors.get_distances()
-        _angle_after = self._gyro.get_orientation()
-        self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
-        self._position_corrector.correct_after_turn_back(_distances_before, _angle_before, _distances_after, _angle_after)
+        _turn_method = random.choice([self.turn_left, self.turn_right])
+        _turn_method()
+        _turn_method()
         self._logger.debug('turn_back done')
 
     def no_turn(self):
