@@ -110,24 +110,6 @@ class EV3Motors(Motors):
         self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_left(_distances_before, _angle_before, _distances_after, _angle_after)
         self._correct_angle_using_back_wall(_distances_before['right'])
-        # if self._turns_until_next_angle_corretion <= 0:
-        #     if _distances_before['right'] < 4:
-        #         self._logger.debug('I am correcting my angle using the back wall...')
-        #         self._motor_pair.on_for_rotations(
-        #             steering=Steering.STRAIGHT.value, 
-        #             speed=SpeedRPM(25 * -1), 
-        #             rotations=(80.0 / self._wheel_circumference_mm),
-        #             brake=True, block=True
-        #         )
-        #         self._motor_pair.on_for_rotations(
-        #             steering=Steering.STRAIGHT.value, 
-        #             speed=SpeedRPM(25 * 1), 
-        #             rotations=(20.0 / self._wheel_circumference_mm),
-        #             brake=True, block=True
-        #         )
-        #         self._turns_until_next_angle_corretion = 3
-        # else:
-        #     self._turns_until_next_angle_corretion = self._turns_until_next_angle_corretion -1
         self._logger.debug('turn_left done')
 
     def turn_right(self):
@@ -143,24 +125,6 @@ class EV3Motors(Motors):
         self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
         self._position_corrector.correct_after_turn_right(_distances_before, _angle_before, _distances_after, _angle_after)
         self._correct_angle_using_back_wall(_distances_before['left'])
-        # if self._turns_until_next_angle_corretion <= 0:
-        #     if _distances_before['left'] < 4:
-        #         self._logger.debug('I am correcting my angle using the back wall...')
-        #         self._motor_pair.on_for_rotations(
-        #             steering=Steering.STRAIGHT.value, 
-        #             speed=SpeedRPM(25 * -1), 
-        #             rotations=(80.0 / self._wheel_circumference_mm),
-        #             brake=True, block=True
-        #         )
-        #         self._motor_pair.on_for_rotations(
-        #             steering=Steering.STRAIGHT.value, 
-        #             speed=SpeedRPM(25 * 1), 
-        #             rotations=(20.0 / self._wheel_circumference_mm),
-        #             brake=True, block=True
-        #         )
-        #         self._turns_until_next_angle_corretion = 3
-        # else:
-        #     self._turns_until_next_angle_corretion = self._turns_until_next_angle_corretion -1
         self._logger.debug('turn_right done')
 
     def turn_back(self):
