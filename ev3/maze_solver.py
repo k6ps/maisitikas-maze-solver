@@ -52,7 +52,6 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
             _move_count += 1
         if not _finished_or_cannot_move and _move_count >= self._max_moves:
             self._logger.warning('Maximum allowed move count={} reached!'.format(self._max_moves))
-            # self._outputs.notify(NotificationType.ERROR, 'Maximum allowed move count={} reached!'.format(self._max_moves))
         return _move_count
 
     def run(self):
