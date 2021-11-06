@@ -1,3 +1,4 @@
+import time
 import logging
 import math
 from maze_solver.kwargs_util import KwArgsUtil
@@ -24,19 +25,19 @@ class PositionCorrector(object):
         self._wheel_diameter_mm = KwArgsUtil.kwarg_or_default(56, 'wheel_diameter_mm', **kwargs)
         self._wheelbase_width_at_centers_mm = KwArgsUtil.kwarg_or_default(97.5, 'wheelbase_width_at_centers_mm', **kwargs)
         self._wheel_circumference_mm = math.pi * self._wheel_diameter_mm
-        self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(65, 'ideal_side_turn_angle', **kwargs)
-        self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(3.0, 'ideal_distance_cm', **kwargs)
+        self._ideal_side_turn_angle = KwArgsUtil.kwarg_or_default(90, 'ideal_side_turn_angle', **kwargs)
+        self._ideal_distance_cm = KwArgsUtil.kwarg_or_default(2.0, 'ideal_distance_cm', **kwargs)
         self._min_front_distance_correction_mm = KwArgsUtil.kwarg_or_default(5.0, 'min_front_distance_correction_mm', **kwargs)
-        self._correction_speed_rpm = KwArgsUtil.kwarg_or_default(15, 'correction_speed_rpm', **kwargs)
-        self._move_forward_speed_factor = KwArgsUtil.kwarg_or_default(-1, 'move_forward_speed_factor', **kwargs)
+        self._correction_speed_rpm = KwArgsUtil.kwarg_or_default(25, 'correction_speed_rpm', **kwargs)
+        self._move_forward_speed_factor = KwArgsUtil.kwarg_or_default(1, 'move_forward_speed_factor', **kwargs)
         self._bad_distance_lower_treshold_cm = KwArgsUtil.kwarg_or_default(4.0, 'bad_distance_lower_treshold_cm', **kwargs)
         self._bad_distance_upper_treshold_cm = KwArgsUtil.kwarg_or_default(15.0, 'bad_distance_upper_treshold_cm', **kwargs)
         self._too_small_distance_upper_treshold_cm = KwArgsUtil.kwarg_or_default(3.2, 'too_small_distance_upper_treshold_cm', **kwargs)
         self._min_reliable_distance_sensor_value_cm = KwArgsUtil.kwarg_or_default(3.2, 'min_reliable_distance_sensor_value_cm', **kwargs)
         self._square_length_cm = KwArgsUtil.kwarg_or_default(18.0, 'square_length_cm', **kwargs)
-        self._move_forward_bad_angle_min_treshold = KwArgsUtil.kwarg_or_default(15, 'move_forward_bad_angle_min_treshold', **kwargs)
-        self._turn_side_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(55, 'turn_side_bad_angle_max_treshold', **kwargs)
-        self._turn_back_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(120, 'turn_back_bad_angle_max_treshold', **kwargs)
+        self._move_forward_bad_angle_min_treshold = KwArgsUtil.kwarg_or_default(5, 'move_forward_bad_angle_min_treshold', **kwargs)
+        self._turn_side_bad_angle_treshold = KwArgsUtil.kwarg_or_default(15, 'turn_side_bad_angle_treshold', **kwargs)
+        self._turn_back_bad_angle_max_treshold = KwArgsUtil.kwarg_or_default(160, 'turn_back_bad_angle_max_treshold', **kwargs)
         self._max_front_distance_to_correct_forward_cm = KwArgsUtil.kwarg_or_default(7.0, 'max_front_distance_to_correct_forward_cm', **kwargs)
         self._max_front_distance_to_correct_backward_cm = KwArgsUtil.kwarg_or_default(21.0, 'max_front_distance_to_correct_backward_cm', **kwargs)
         self._min_front_distance_to_correct_backward_cm = KwArgsUtil.kwarg_or_default(17.0, 'max_front_distance_to_correct_backward_cm', **kwargs)
@@ -62,7 +63,10 @@ class PositionCorrector(object):
         return abs(angle_after - angle_before) > self._move_forward_bad_angle_min_treshold
 
     def _has_gyro_angle_changed_too_little_for_side_turn(self, angle_before: int, angle_after: int):
-        return abs(angle_after - angle_before) < self._turn_side_bad_angle_max_treshold
+        return abs(angle_after - angle_before) < (self._ideal_side_turn_angle - self._turn_side_bad_angle_treshold)
+
+    def _has_gyro_angle_changed_too_much_for_side_turn(self, angle_before: int, angle_after: int):
+        return abs(angle_after - angle_before) > (self._ideal_side_turn_angle + self._turn_side_bad_angle_treshold)
 
     def _has_gyro_angle_changed_too_little_for_back_turn(self, angle_before: int, angle_after: int):
         return abs(angle_after - angle_before) < self._turn_back_bad_angle_max_treshold
@@ -108,7 +112,8 @@ class PositionCorrector(object):
             )
 
     def _is_front_distance_too_short(self, front_distance_cm: float) -> bool:
-        return front_distance_cm < (self._ideal_distance_cm + self._square_length_cm)
+        # return front_distance_cm < (self._ideal_distance_cm + self._square_length_cm)
+        return front_distance_cm != self._ideal_distance_cm
 
     def _can_front_distance_be_corrected_forward(self, front_distance_cm: float) -> bool:
         return front_distance_cm < self._max_front_distance_to_correct_forward_cm
@@ -118,29 +123,31 @@ class PositionCorrector(object):
         _is_above_lower_limit = front_distance_cm > self._min_front_distance_to_correct_backward_cm
         return _is_below_upper_limit and _is_above_lower_limit
 
-    def _correct_distances(self, distances_before: dict, distances_after: dict):
-        if self._is_only_front_distance_bad(distances_after) and self._can_front_distance_be_corrected_forward(distances_after['front']):
-            self._logger.debug('Bad front distance. I am at good angle but too far from the next front wall')
-            self._correct_front_distance(distances_after['front'])
-        elif self._is_left_bad_and_right_too_close_only(distances_after):
-            self._logger.debug('Bad left distance, small right distance. I am at good angle but too much at right')
-            self._motor_pair.on_for_degrees(
-                steering=Steering.LEFT_ON_SPOT.value, 
-                speed=SpeedRPM(self._correction_speed_rpm), 
-                degrees=10
-            )
-        elif self._is_right_bad_and_left_too_close_only(distances_after):
-            self._logger.debug('Bad right distance, small left distance. I am at good angle but too much at left')
-            self._motor_pair.on_for_degrees(
-                steering=Steering.RIGHT_ON_SPOT.value, 
-                speed=SpeedRPM(self._correction_speed_rpm), 
-                degrees=10
-            )
-        else:
-            self._logger.debug('All distances are good')
+    # def _correct_distances(self, distances_before: dict, distances_after: dict):
+    #     if self._is_only_front_distance_bad(distances_after) and self._can_front_distance_be_corrected_forward(distances_after['front']):
+    #         self._logger.debug('Bad front distance. I am at good angle but too far from the next front wall')
+    #         self._correct_front_distance(distances_after['front'])
+    #     elif self._is_left_bad_and_right_too_close_only(distances_after):
+    #         self._logger.debug('Bad left distance, small right distance. I am at good angle but too much at right')
+    #         self._motor_pair.on_for_degrees(
+    #             steering=Steering.LEFT_ON_SPOT.value, 
+    #             speed=SpeedRPM(self._correction_speed_rpm), 
+    #             degrees=10
+    #         )
+    #     elif self._is_right_bad_and_left_too_close_only(distances_after):
+    #         self._logger.debug('Bad right distance, small left distance. I am at good angle but too much at left')
+    #         self._motor_pair.on_for_degrees(
+    #             steering=Steering.RIGHT_ON_SPOT.value, 
+    #             speed=SpeedRPM(self._correction_speed_rpm), 
+    #             degrees=10
+    #         )
+    #     else:
+    #         self._logger.debug('All distances are good')
 
     def _correct_bad_angle_after_turn(self, angle_before: int, angle_after: int, steering: Steering):
-        _angle_diff = self._ideal_side_turn_angle - abs(angle_after - angle_before)
+        _angle_diff = abs(self._ideal_side_turn_angle - abs(angle_after - angle_before))
+        if _angle_diff < 15:
+            _angle_diff = 15
         self._logger.debug('Angle diff = {}'.format(_angle_diff))
         _rotations = (self._wheelbase_width_at_centers_mm * _angle_diff) / (self._wheel_diameter_mm * 360)
         self._motor_pair.on_for_rotations(
@@ -149,11 +156,14 @@ class PositionCorrector(object):
             rotations=_rotations
         )
 
-    def _recover_from_hitting_wall(self, angle_before: int, angle_after: int):
+    def _recover_from_hitting_wall(self, angle_before: int, angle_after: int, recursion_count: int):
+        if recursion_count >= 6:
+            self._logger.debug('I have reached my recursion limit! Just continuing and hoping for the best.')
+            return
         self._motor_pair.on_for_rotations(
             steering=Steering.STRAIGHT.value, 
             speed=SpeedRPM(self._correction_speed_rpm * self._move_forward_speed_factor), 
-            rotations=-(2.0 * 10 / self._wheel_circumference_mm),
+            rotations=-((2.0 + recursion_count) * 10 / self._wheel_circumference_mm),
             brake=True, block=True
         )
         _angle_diff = angle_after - angle_before
@@ -164,17 +174,23 @@ class PositionCorrector(object):
             speed=SpeedRPM(self._correction_speed_rpm), 
             rotations=_rotations
         )
-        _front_distance = self._get_distance_remainder_cm(self._distance_sensors.get_distances()['front'] - self._ideal_distance_cm)
+        # _front_distance = self._get_distance_remainder_cm(self._distance_sensors.get_distances()['front'] - self._ideal_distance_cm)
+        _front_distance = 9.0 - recursion_count
         _angle_before_front_distance_correction = self._gyro.get_orientation()
         self._motor_pair.on_for_rotations(
             steering=Steering.STRAIGHT.value, 
             speed=SpeedRPM(self._correction_speed_rpm * self._move_forward_speed_factor), 
             rotations=_front_distance * 10 / self._wheel_circumference_mm
         )
+        # Allow some time for motors to stop and gyro to react
+        time.sleep(0.1)
         _angle_after_front_distance_correction = self._gyro.get_orientation()
-        if (self._has_gyro_angle_changed_too_much_for_move_forward(_angle_before_front_distance_correction, _angle_after_front_distance_correction)):
-            self._logger.debug('Bad gyro angle when recovering from hitting wall. I have hit the wall again')
-            self._recover_from_hitting_wall(_angle_before_front_distance_correction, _angle_after_front_distance_correction)
+        if (self._has_gyro_angle_changed_too_much_for_move_forward(angle_before, _angle_after_front_distance_correction)):
+            self._logger.debug('Bad gyro angle when recovering from hitting wall. I have hit the wall again or failed to recover!')
+            self._recover_from_hitting_wall(angle_before, _angle_after_front_distance_correction, recursion_count + 1)
+        # if (self._has_gyro_angle_changed_too_much_for_move_forward(_angle_before_front_distance_correction, _angle_after_front_distance_correction)):
+        #     self._logger.debug('Bad gyro angle when recovering from hitting wall. I have hit the wall again')
+            # self._recover_from_hitting_wall(_angle_before_front_distance_correction, _angle_after_front_distance_correction)
 
     def correct_after_move_forward(self, 
         distances_before: dict, 
@@ -183,16 +199,37 @@ class PositionCorrector(object):
         angle_after: int 
     ):
         self._logger.debug('correct_after_move_forward')
-        self._log_distance_remainders(distances_after)
+        # self._log_distance_remainders(distances_after)
         _is_angle_bad = self._has_gyro_angle_changed_too_much_for_move_forward(angle_before, angle_after)
         if _is_angle_bad:
             self._logger.debug('Bad gyro angle. I have hit the wall')
-            self._recover_from_hitting_wall(angle_before, angle_after)
+            self._recover_from_hitting_wall(angle_before, angle_after, 1)
         else:
-            if self._is_front_distance_too_short(distances_before['front']) and self._can_front_distance_be_corrected_backward(distances_before['front']):
-                self._logger.debug('Too small front distance before movement. I am at good angle but too near the next front wall')
-                self._correct_front_distance(self._get_distance_remainder_cm(distances_before['front']))
-            self._correct_distances(distances_before, distances_after)
+            # if distances_after['front'] != self._ideal_distance_cm and self._can_front_distance_be_corrected_backward(distances_before['front']):
+            if distances_after['front'] <=7 and distances_after['front'] != self._ideal_distance_cm:
+                # self._logger.debug('Too small front distance before movement. I am at good angle but too near the next front wall')
+                self._logger.debug('Bad front distance!')
+                self._correct_front_distance(distances_after['front'])
+                # self._correct_front_distance(self._get_distance_remainder_cm(distances_before['front']))
+            if distances_after['left'] < 5 and distances_after['right'] < 5:
+                self._logger.debug('I am in between two side walls. Checking if i am too close to one..')
+                if distances_after['left'] < 2:
+                    self._logger.debug('I am too close to left wall. Correcting angle a bit..')
+                    self._motor_pair.on_for_degrees(
+                        steering=Steering.RIGHT_ON_SPOT.value, 
+                        speed=SpeedRPM(self._correction_speed_rpm), 
+                        degrees=10
+                    )
+                elif distances_after['right'] < 2:
+                    self._logger.debug('I am too close to right wall. Correcting angle a bit..')
+                    self._motor_pair.on_for_degrees(
+                        steering=Steering.LEFT_ON_SPOT.value, 
+                        speed=SpeedRPM(self._correction_speed_rpm), 
+                        degrees=10
+                    )
+                else:
+                    self._logger.debug('No problem, i am fine between the walls.')
+            # self._correct_distances(distances_before, distances_after)
         self._logger.debug('correct_after_move_forward done')
 
     def correct_after_turn_left(self, 
@@ -203,11 +240,15 @@ class PositionCorrector(object):
         can_move_backward: bool = False
     ):
         self._logger.debug('correct_after_turn_left')
-        self._log_distance_remainders(distances_after)
-        _is_angle_bad = self._has_gyro_angle_changed_too_little_for_side_turn(angle_before, angle_after)
-        if _is_angle_bad:
-            self._logger.debug('Bad gyro angle. I hit the wall on left turn and turned too little.')
+        # self._log_distance_remainders(distances_after)
+        _is_angle_too_little = self._has_gyro_angle_changed_too_little_for_side_turn(angle_before, angle_after)
+        _is_angle_too_big = self._has_gyro_angle_changed_too_much_for_side_turn(angle_before, angle_after)
+        if _is_angle_too_little:
+            self._logger.debug('Bad gyro angle - too little!')
             self._correct_bad_angle_after_turn(angle_before, angle_after, Steering.LEFT_ON_SPOT)
+        elif _is_angle_too_big:
+            self._logger.debug('Bad gyro angle - too big!')
+            self._correct_bad_angle_after_turn(angle_before, angle_after, Steering.RIGHT_ON_SPOT)
         self._logger.debug('correct_after_turn_left done')
 
     def correct_after_turn_right(self, 
@@ -218,11 +259,15 @@ class PositionCorrector(object):
         can_move_backward: bool = False
     ):
         self._logger.debug('correct_after_turn_right')
-        self._log_distance_remainders(distances_after)
-        _is_angle_bad = self._has_gyro_angle_changed_too_little_for_side_turn(angle_before, angle_after)
-        if _is_angle_bad:
-            self._logger.debug('Bad gyro angle. I hit the wall on right turn and turned too little.')
+        # self._log_distance_remainders(distances_after)
+        _is_angle_too_little = self._has_gyro_angle_changed_too_little_for_side_turn(angle_before, angle_after)
+        _is_angle_too_big = self._has_gyro_angle_changed_too_much_for_side_turn(angle_before, angle_after)
+        if _is_angle_too_little:
+            self._logger.debug('Bad gyro angle - too little!')
             self._correct_bad_angle_after_turn(angle_before, angle_after, Steering.RIGHT_ON_SPOT)
+        elif _is_angle_too_big:
+            self._logger.debug('Bad gyro angle - too big!')
+            self._correct_bad_angle_after_turn(angle_before, angle_after, Steering.LEFT_ON_SPOT)
         self._logger.debug('correct_after_turn_right done')
 
     def correct_after_turn_back(self, 
@@ -232,7 +277,7 @@ class PositionCorrector(object):
         angle_after: int, 
     ):
         self._logger.debug('correct_after_turn_back')
-        self._log_distance_remainders(distances_after)
+        # self._log_distance_remainders(distances_after)
         _is_angle_bad = self._has_gyro_angle_changed_too_little_for_back_turn(angle_before, angle_after)
         if _is_angle_bad:
             self._logger.debug('Bad gyro angle. I hit the wall on back turn and turned too little.')

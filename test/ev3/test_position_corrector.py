@@ -55,21 +55,21 @@ class MoveForwardCorrectionTests(PositionCorrectorTests):
         self._assert_no_corrections_made()
 
     def test_should_move_forward_when_front_distance_after_move_is_too_big(self):
-        _distances_before = {'left': 3.0, 'right': 3.0, 'front': 18.0 + 3.0}
+        _distances_before = {'left': 3.0, 'right': 3.0, 'front': 18.0 + 2.0}
         _distances_after = {'left': 3.0, 'right': 3.0, 'front': 5.0}
         self._position_corrector.correct_after_move_forward(_distances_before, 0, _distances_after, 0)
         self._ev3_motor_pair.on_for_rotations.assert_called()
         args, kwargs = self._ev3_motor_pair.on_for_rotations.call_args
-        _expected_rotations = 2.0 / (self._test_wheel_diameter_mm / 10 * math.pi)
+        _expected_rotations = 3.0 / (self._test_wheel_diameter_mm / 10 * math.pi)
         self.assertAlmostEqual(_expected_rotations, kwargs.get('rotations'), places=3)
 
     def test_should_move_backward_when_front_distance_before_move_is_too_small(self):
-        _distances_before = {'left': 3.0, 'right': 3.0, 'front': 18.0 + 3.0 - 2.0}
-        _distances_after = {'left': 3.0, 'right': 3.0, 'front': 3.0 - 2.0}
+        _distances_before = {'left': 3.0, 'right': 3.0, 'front': 18.0 + 1.0}
+        _distances_after = {'left': 3.0, 'right': 3.0, 'front': 1.0}
         self._position_corrector.correct_after_move_forward(_distances_before, 0, _distances_after, 0)
         self._ev3_motor_pair.on_for_rotations.assert_called()
         args, kwargs = self._ev3_motor_pair.on_for_rotations.call_args
-        _expected_rotations = -(2.0 / (self._test_wheel_diameter_mm / 10 * math.pi))
+        _expected_rotations = -(1.0 / (self._test_wheel_diameter_mm / 10 * math.pi))
         self.assertAlmostEqual(_expected_rotations, kwargs.get('rotations'), places=3)
 
     def test_should_move_back_and_correct_turn_back_to_right_when_has_hit_left_wall(self):
@@ -88,7 +88,7 @@ class MoveForwardCorrectionTests(PositionCorrectorTests):
         self.assertAlmostEqual(_expected_rotations_turn, kwargs.get('rotations'), places=3)
         self.assertEqual(Steering.RIGHT_ON_SPOT.value, kwargs.get('steering'))
         name, args, kwargs = self._ev3_motor_pair.on_for_rotations.mock_calls[2]
-        _expected_rotations_move_forward = (15.0 - 3.0) / (self._test_wheel_diameter_mm / 10 * math.pi)
+        _expected_rotations_move_forward = (15.0 - 2.0) / (self._test_wheel_diameter_mm / 10 * math.pi)
         self.assertAlmostEqual(_expected_rotations_move_forward, kwargs.get('rotations'), places=3)
         self.assertEqual(Steering.STRAIGHT.value, kwargs.get('steering'))
 
@@ -108,7 +108,7 @@ class MoveForwardCorrectionTests(PositionCorrectorTests):
         self.assertAlmostEqual(_expected_rotations_turn, kwargs.get('rotations'), places=3)
         self.assertEqual(Steering.LEFT_ON_SPOT.value, kwargs.get('steering'))
         name, args, kwargs = self._ev3_motor_pair.on_for_rotations.mock_calls[2]
-        _expected_rotations_move_forward = (15.0 - 3.0) / (self._test_wheel_diameter_mm / 10 * math.pi)
+        _expected_rotations_move_forward = (15.0 - 2.0) / (self._test_wheel_diameter_mm / 10 * math.pi)
         self.assertAlmostEqual(_expected_rotations_move_forward, kwargs.get('rotations'), places=3)
         self.assertEqual(Steering.STRAIGHT.value, kwargs.get('steering'))
 
