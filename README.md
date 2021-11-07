@@ -1,12 +1,16 @@
 # About
 
-This is the code for my maze solver robot. It includes a simulator and a [LEGO Mindstorms EV3](https://www.lego.com/mindstorms) implementation on [ev3dev](https://www.ev3dev.org/) using [ev3devpython v2](https://sites.google.com/site/ev3devpython/). I had no prior experience in maze solving, and i wrote this from scratch without any significant research on maze solving algorithms (just for the fun of it). So, it may well be naive and/or inefficient.  Certainly my EV3 robot is too big and too slow. But in any case - i'm going to [Robotex Estonia](https://robotex.international/competitions/maze-solving/) to compete with it :P 
+This is the code for my maze solver robot. It includes a simulator and a [LEGO Mindstorms EV3](https://www.lego.com/mindstorms) implementation on [ev3dev](https://www.ev3dev.org/) using [ev3devpython v2](https://sites.google.com/site/ev3devpython/). I had no prior experience in maze solving, and i wrote this from scratch without any significant research on maze solving algorithms (i deliberately chose not to use any existing algorithm, to see if i can come up with a decent one myself). So, it may well be naive and/or inefficient.  Certainly my EV3 robot is too big and too slow. But in any case - i'm going to [Robotex Estonia](https://robotex.international/competitions/maze-solving/) to compete with it :P 
 
 # Status
 
-This is currently work in progress. The algorithm lacks cycle detection. 
+It won the third place in maze solving at Robotex Estonia 2021!!! However, it was not a good performance - it did not get even close to the finish square, it hit a wall badly and lost direction, it spent too much time trying to recover from hitting wall and correcting turns and position. Just there were far less competitors in this pandemic-time Robotex than usual. Also, most other competitors did not do so well this time.  
 
-The EV3 part does not perform well. I chose to use the EV3 ultrasound distance sensors, but seems like these are not accurate enough in distances 3 cm and less. So' i had to use indirect measurements from farther away falls. Also, the EV3 gyro sensor is not reliable enought to get correct angle change. Moreover, it is not quite possible to create a robot that has width less than 10cm with LEGO parts. Thus, my robot is hitting walls. But i created a (recursive) function to recover from hitting to wall.
+It is all work in progress. I am still trying to make it to the finish line of 16x16 maze in the given time with fair probability, using just LEGO original parts.
+
+The  EV3 light sensors are good at measuring short distances from the white walls. Also, gyro sensor seems accurate enough, if it has bee properly reset. However, it is not quite possible to create a robot that has width less than 10cm with LEGO Mindstorms EV3 parts. Thus, i have created an extensive (and overengineered) direction correction and recovery logic. However, my robot is still hitting walls, loosing direction, and is generally too slow.
+
+The maze solving algorithm lacks cycle detection, and is probably not the most efficient. 
 
 Simulator works fine. However, it is tedious and error-prone to add new mazes to it. I should figure out some clever way to do it, e.g. both human and machine readable ASCII art.
 
@@ -44,7 +48,7 @@ python ./maze_solver_simulator_app.py
 
 # EV3 robot
 
-The EV3 robot uses three ultrasound distance sensors, gyro sensor, and two large servo motors. As said, this is very likely a bad idea. I should try light/color sensors instead of ultrasounds, and correcting the movement angle by just pushing the back of the robot against a wall for a while.
+The EV3 robot uses three light sensors, gyro sensor, and two large servo motors.
 
 ## Deploying to EV3 brick
 
@@ -60,4 +64,5 @@ I created several system tests to test particular actual behaviours in a real te
 ## Running the robot
 
 1. Execute the ```maze_solver_ev3_app.py``` in the EV3 brick.
-2. Push the center button.
+2. Wait at least 15 seconds. Currently there is no indication when the program is fully loaded and ready to start.
+3. Push the center button.
