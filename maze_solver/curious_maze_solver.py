@@ -112,17 +112,17 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def turn_left(self):
         super().turn_left()
         self._current_direction = self._current_direction.get_left_direction()
-        self._logger.debug('Direction is now {}'.format(self._current_direction))
+        self._logger.info('Direction is now {}'.format(self._current_direction))
 
     def turn_right(self):
         super().turn_right()
         self._current_direction = self._current_direction.get_right_direction()
-        self._logger.debug('Direction is now {}'.format(self._current_direction))
+        self._logger.info('Direction is now {}'.format(self._current_direction))
 
     def turn_back(self):
         super().turn_back()
         self._current_direction = self._current_direction.get_back_direction()
-        self._logger.debug('Direction is now {}'.format(self._current_direction))
+        self._logger.info('Direction is now {}'.format(self._current_direction))
 
     def add_square_as_visited(self, square):
         self._visited_squares[self.get_key_for_square(square.x, square.y)] = square
