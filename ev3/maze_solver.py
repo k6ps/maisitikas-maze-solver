@@ -26,7 +26,7 @@ class EV3MazeSolver(SimplePeriodicWorkerThread):
     def __init__(self, logger = None):
         self._logger = logger or logging.getLogger(__name__)
         super().__init__(thread_name = 'EV3MazeSolver')
-        self._max_moves = 100
+        self._max_moves = 20
         self._ev3_distance_sensors = EV3DistanceDetectors()
         self._ev3_distance_sensors.start()
         self._ev3_gyro = Gyro()
