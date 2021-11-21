@@ -112,17 +112,17 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
     def turn_left(self):
         super().turn_left()
         self._current_direction = self._current_direction.get_left_direction()
-        self._logger.info('Direction is now {}'.format(self._current_direction))
+        self._logger.debug('Direction is now {}'.format(self._current_direction))
 
     def turn_right(self):
         super().turn_right()
         self._current_direction = self._current_direction.get_right_direction()
-        self._logger.info('Direction is now {}'.format(self._current_direction))
+        self._logger.debug('Direction is now {}'.format(self._current_direction))
 
     def turn_back(self):
         super().turn_back()
         self._current_direction = self._current_direction.get_back_direction()
-        self._logger.info('Direction is now {}'.format(self._current_direction))
+        self._logger.debug('Direction is now {}'.format(self._current_direction))
 
     def add_square_as_visited(self, square):
         self._visited_squares[self.get_key_for_square(square.x, square.y)] = square
@@ -133,7 +133,7 @@ class CuriousMazeSolver(RandomWalkerMazeSolver):
         _new_x = self._current_square.x + self._current_direction.value['x']
         _new_y = self._current_square.y + self._current_direction.value['y']
         self._current_square = Square(x = _new_x, y = _new_y)
-        self._logger.info('Current square is now x={}, y={}'.format(_new_x, _new_y))
+        self._logger.info('Current square is now x={}, y={}, current direction is {}'.format(_new_x, _new_y, self._current_direction))
 
     def is_dead_end_in_direction(self, direction: Direction) -> bool:
         return self.is_dead_end(
