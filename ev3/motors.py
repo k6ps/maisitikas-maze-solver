@@ -25,7 +25,7 @@ class EV3Motors(Motors):
         self._distance_sensors = distance_sensors
         self._gyro = gyro
         self._motor_pair = MoveSteering(OUTPUT_A, OUTPUT_B)
-        self._position_corrector = PositionCorrector(self._motor_pair, self._gyro, self._distance_sensors)
+        self._position_corrector = PositionCorrector(self._motor_pair, self._gyro)
         self._maze_square_length_mm = KwArgsUtil.kwarg_or_default(180, 'maze_square_length_mm', **kwargs)
         self._move_forward_speed_rpm = KwArgsUtil.kwarg_or_default(60, 'move_forward_speed_rpm', **kwargs)
         self._motor_pair_polarity_factor = KwArgsUtil.kwarg_or_default(1, 'motor_pair_polarity_factor', **kwargs)
@@ -96,21 +96,19 @@ class EV3Motors(Motors):
         _distances_after = self._distance_sensors.get_distances()
         _angle_after = self._gyro.get_orientation()
         self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
-        correct_function(_distances_before, _angle_before, _distances_after, _angle_after)
+        correct_function(distances_before=_distances_before, angle_before=_angle_before, distances_after=_distances_after, angle_after=_angle_after)
 
 
     def move_forward(self):
+
+        def move_function():
+            self._move_forward_mm(distance_mm=self._maze_square_length_mm, speed_rpm=self._move_forward_speed_rpm)
+
+        def correct_function(angle_before, distances_after, angle_after, **kwargs):
+            self._position_corrector.correct_after_move_forward(angle_before, distances_after, angle_after)
+
         self._logger.debug('Move_forward')
-        _distances_before = self._distance_sensors.get_distances()
-        _angle_before = self._gyro.get_orientation()
-        self._log_distances_and_angle('before', _distances_before, _angle_before)
-        self._move_forward_mm(distance_mm=self._maze_square_length_mm, speed_rpm=self._move_forward_speed_rpm)
-        # Allow some time for motors to stop and gyro to react
-        time.sleep(self._wait_for_motors_and_gyro_after_move_sec)
-        _distances_after = self._distance_sensors.get_distances()
-        _angle_after = self._gyro.get_orientation()
-        self._log_distances_and_angle('after move before correction', _distances_after, _angle_after)
-        self._position_corrector.correct_after_move_forward(_distances_before, _angle_before, _distances_after, _angle_after)
+        self._move(move_function, correct_function)
         self._logger.debug('Move_forward done')
 
     def turn_left(self):
@@ -118,8 +116,8 @@ class EV3Motors(Motors):
         def move_function():
             self._turn_on_spot_deg(direction=Steering.LEFT_ON_SPOT, degrees=74)
 
-        def correct_function(distances_before, angle_before, distances_after, angle_after):
-            self._position_corrector.correct_after_turn_left(distances_before, angle_before, distances_after, angle_after)
+        def correct_function(distances_before, angle_before, angle_after, **kwargs):
+            self._position_corrector.correct_after_turn_left(angle_before, angle_after)
             self._correct_angle_using_back_wall(distances_before['right'])
 
         self._logger.debug('turn_left')
@@ -131,8 +129,8 @@ class EV3Motors(Motors):
         def move_function():
             self._turn_on_spot_deg(direction=Steering.RIGHT_ON_SPOT, degrees=74)
 
-        def correct_function(distances_before, angle_before, distances_after, angle_after):
-            self._position_corrector.correct_after_turn_right(distances_before, angle_before, distances_after, angle_after)
+        def correct_function(distances_before, angle_before, angle_after, **kwargs):
+            self._position_corrector.correct_after_turn_right(angle_before, angle_after)
             self._correct_angle_using_back_wall(distances_before['left'])
 
         self._logger.debug('turn_right')
