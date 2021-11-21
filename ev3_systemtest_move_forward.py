@@ -17,9 +17,13 @@ def set_up_console_logging():
 if __name__ == "__main__":
     set_up_console_logging()
     distance_sensors = EV3DistanceDetectors()
+    gyro = Gyro()
+    motors = EV3Motors(distance_sensors = distance_sensors, gyro = gyro)
     distance_sensors.start()
-    motors = EV3Motors(distance_sensors = distance_sensors, gyro = Gyro())
-    for _ in range(1):
+    gyro.start()
+    for _i in range(6):
+        print('======== move {} ========'.format(_i + 1))
         motors.move_forward()
         time.sleep(1)
     distance_sensors.stop()
+    gyro.stop()
